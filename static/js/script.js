@@ -106,8 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add glass morphism elements
     addFuturisticElements();
     
-    // Initialize mascot and heatmap functionality
-    initializeMascotSystem();
+    // Initialize enhanced heatmap functionality
     initializeHeatmapSystem();
 });
 
@@ -129,11 +128,6 @@ function handleSourceTextInput() {
     
     // Update UI state
     updateUIState();
-    
-    // Notify mascot of text change
-    document.dispatchEvent(new CustomEvent('translation:textChanged', {
-        detail: { text: text }
-    }));
     
     // Auto-translate if text length is reasonable
     if (textLength > 0 && textLength <= 100) {
@@ -161,14 +155,6 @@ async function translateText() {
         // Show loading state and hide any previous results or errors
         showLoading(true);
         hideError();
-        
-        // Dispatch event for mascot interaction
-        document.dispatchEvent(new CustomEvent('translation:started', {
-            detail: {
-                text: text,
-                targetLang: lang
-            }
-        }));
         
         // Show translation loading progress
         startProgressSimulation();
@@ -199,12 +185,6 @@ async function translateText() {
             if (!response.ok || data.error) {
                 showError(data.error || 'Translation failed. Please try again.');
                 
-                // Dispatch error event for mascot
-                document.dispatchEvent(new CustomEvent('translation:error', {
-                    detail: {
-                        error: data.error || 'Translation failed'
-                    }
-                }));
                 return;
             }
             
@@ -213,27 +193,12 @@ async function translateText() {
             
             // Show model info
             showModelInfo('Using mBART neural model with industry-standard metrics', 'var(--bs-info)');
-            
-            // Dispatch success event for mascot
-            document.dispatchEvent(new CustomEvent('translation:success', {
-                detail: {
-                    translation: data.translation,
-                    metrics: data.metrics
-                }
-            }));
         }, 500);
         
     } catch (error) {
         showLoading(false);
         showError('An error occurred. Please try again later.');
         console.error('Translation error:', error);
-        
-        // Dispatch error event for mascot
-        document.dispatchEvent(new CustomEvent('translation:error', {
-            detail: {
-                error: 'An error occurred'
-            }
-        }));
     }
 }
 
@@ -763,348 +728,183 @@ function applyQualityHeatmap(text, metrics) {
     const isAsian = ['ja', 'zh', 'th', 'km', 'lo', 'my'].includes(targetLang.value);
     const items = isAsian ? text.split('') : text.split(/\s+/);
     
-    // Create quality scores for each word/character
-    // Use a combination of the metrics to simulate per-word/character quality
+    // Create quality scores for each word/character with a more advanced algorithm
     const scores = [];
-    const qualityLevels = ['poor', 'fair', 'good', 'excellent'];
     const overallQuality = metrics.quality || 0.5;
     
-    // Generate random scores slightly distributed around the overall quality
+    // Get individual component scores
+    const bleuScore = metrics.bleu || 0.5;
+    const rougeScore = metrics.rouge || 0.5;
+    const meteorScore = metrics.meteor || 0.5;
+    
+    // Generate more realistic word-level scores
     for (let i = 0; i < items.length; i++) {
-        // Base variation around overall quality
-        let variation = Math.random() * 0.4 - 0.2; // -0.2 to 0.2 variation
-        let score = Math.min(0.95, Math.max(0.05, overallQuality + variation));
+        // Factors that influence word-level quality in real NMT systems:
         
-        // Introduce occasional outliers for realism
-        if (Math.random() < 0.05) { // 5% chance of outlier
-            score = Math.random() * 0.5 + (Math.random() < 0.5 ? 0 : 0.5); // Either high or low outlier
+        // 1. Word length factor - shorter words tend to have higher confidence in real systems
+        const wordLength = items[i].length;
+        const lengthFactor = Math.max(0.7, 1 - (wordLength / 15)); // Longer words get lower scores
+        
+        // 2. Position factor - words at the beginning and end often have higher confidence
+        const normalizedPosition = i / (items.length - 1 || 1); // 0 to 1
+        const positionFactor = 1.0 - Math.abs(0.5 - normalizedPosition) * 0.3; // Higher in middle
+        
+        // 3. Word complexity factor - simulate complex words having lower scores
+        // This is a simplified simulation - in real systems, this would use linguistic features
+        const hasSpecialChars = /[^a-zA-Z0-9\s]/.test(items[i]);
+        const complexityFactor = hasSpecialChars ? 0.9 : 1.0;
+        
+        // 4. Random variation (weighted by metric components)
+        const variationBase = (bleuScore + rougeScore * 1.2 + meteorScore * 0.8) / 3;
+        const randomVariation = (Math.random() * 0.3 - 0.15) * (1 - variationBase); // Less random for higher scores
+        
+        // Calculate final score with all factors
+        let score = overallQuality * lengthFactor * positionFactor * complexityFactor + randomVariation;
+        
+        // Introduce occasional outliers for realism (5% chance)
+        if (Math.random() < 0.05) {
+            // Outliers are more dramatic for lower overall quality translations
+            const outlierFactor = Math.random() < 0.7 ? -0.3 : 0.3; // 70% chance of negative outlier
+            score += outlierFactor * (1 - overallQuality);
         }
         
+        // Clamp score between 0.05 and 0.98
+        score = Math.min(0.98, Math.max(0.05, score));
         scores.push(score);
     }
     
-    // Apply quality classes to each word/character
+    // Apply enhanced quality classes to each word/character
     let result = '';
     for (let i = 0; i < items.length; i++) {
         const score = scores[i];
         let qualityClass = '';
         let tooltip = '';
         
-        if (score >= 0.7) {
+        // More granular quality levels
+        if (score >= 0.75) {
             qualityClass = 'quality-excellent';
-            tooltip = 'Excellent translation confidence';
-        } else if (score >= 0.4) {
+            tooltip = 'Excellent confidence';
+        } else if (score >= 0.5) {
             qualityClass = 'quality-good';
-            tooltip = 'Good translation confidence';
-        } else if (score >= 0.2) {
+            tooltip = 'Good confidence';
+        } else if (score >= 0.25) {
             qualityClass = 'quality-fair';
-            tooltip = 'Fair translation confidence';
+            tooltip = 'Fair confidence';
         } else {
             qualityClass = 'quality-poor';
-            tooltip = 'Poor translation confidence';
+            tooltip = 'Low confidence';
         }
         
-        // For Asian languages, we need to handle whitespace differently
+        // Enhanced span with more data attributes for interactive features
+        const scorePercent = Math.round(score * 100);
+        
+        // For Asian languages, handle whitespace differently
         if (isAsian) {
-            result += `<span class="${qualityClass}" data-tooltip="${tooltip}" data-score="${Math.round(score * 100)}">${items[i]}</span>`;
+            result += `<span class="${qualityClass} heatmap-word" 
+                data-tooltip="${tooltip}" 
+                data-score="${scorePercent}" 
+                data-quality="${score.toFixed(2)}"
+                title="${tooltip}: ${scorePercent}%">${items[i]}</span>`;
         } else {
-            result += `<span class="${qualityClass}" data-tooltip="${tooltip}" data-score="${Math.round(score * 100)}">${items[i]}</span> `;
+            result += `<span class="${qualityClass} heatmap-word" 
+                data-tooltip="${tooltip}" 
+                data-score="${scorePercent}" 
+                data-quality="${score.toFixed(2)}"
+                title="${tooltip}: ${scorePercent}%">${items[i]}</span> `;
         }
     }
     
     return result;
 }
 
-// Create heatmap legend
+// Create enhanced heatmap legend
 function createHeatmapLegend() {
     const legend = document.createElement('div');
     legend.className = 'heatmap-legend';
+    legend.style.marginTop = '10px';
+    legend.style.display = 'flex';
+    legend.style.alignItems = 'center';
+    legend.style.justifyContent = 'flex-end';
+    legend.style.fontSize = '0.8rem';
+    legend.style.color = 'var(--bs-secondary)';
     
     legend.innerHTML = `
-        <span class="heatmap-legend-title">Translation Quality:</span>
-        <div class="legend-item">
-            <div class="legend-color legend-excellent"></div>
-            <span class="legend-label">Excellent</span>
+        <span class="heatmap-legend-title" style="margin-right: 10px;">Translation Confidence:</span>
+        <div class="legend-items" style="display: flex; align-items: center;">
+            <div class="legend-item" style="display: flex; align-items: center; margin-right: 8px;">
+                <div class="legend-color quality-excellent" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 3px;"></div>
+                <span class="legend-label">Excellent</span>
+            </div>
+            <div class="legend-item" style="display: flex; align-items: center; margin-right: 8px;">
+                <div class="legend-color quality-good" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 3px;"></div>
+                <span class="legend-label">Good</span>
+            </div>
+            <div class="legend-item" style="display: flex; align-items: center; margin-right: 8px;">
+                <div class="legend-color quality-fair" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 3px;"></div>
+                <span class="legend-label">Fair</span>
+            </div>
+            <div class="legend-item" style="display: flex; align-items: center;">
+                <div class="legend-color quality-poor" style="width: 12px; height: 12px; border-radius: 2px; margin-right: 3px;"></div>
+                <span class="legend-label">Low</span>
+            </div>
         </div>
-        <div class="legend-item">
-            <div class="legend-color legend-good"></div>
-            <span class="legend-label">Good</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-fair"></div>
-            <span class="legend-label">Fair</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-poor"></div>
-            <span class="legend-label">Poor</span>
+        <div class="legend-info" style="margin-left: 15px; font-size: 0.7rem; opacity: 0.8; font-style: italic;">
+            Hover over words for specific confidence scores
         </div>
     `;
     
     return legend;
 }
 
-// Initialize heatmap tooltip and event handling
+// Initialize mascot system (removed)
+// Enhanced heatmap initialization 
 function initializeHeatmapSystem() {
-    // Create tooltip element if it doesn't exist
-    if (!document.getElementById('heatmap-tooltip')) {
-        const tooltip = document.createElement('div');
-        tooltip.id = 'heatmap-tooltip';
-        tooltip.className = 'heatmap-tooltip';
-        document.body.appendChild(tooltip);
-    }
+    // Initialize any heatmap-related functionality
     
-    // Set up event delegation for tooltips
-    document.addEventListener('mouseover', function(e) {
-        if (e.target.closest('.heatmap-text span')) {
-            const span = e.target.closest('.heatmap-text span');
-            const tooltip = document.getElementById('heatmap-tooltip');
-            const score = span.getAttribute('data-score');
-            const tooltipText = span.getAttribute('data-tooltip');
+    // Add event listeners for enhancing heatmap interactions
+    document.addEventListener('mouseover', (event) => {
+        // Find if the event target is a heatmap-word element
+        if (event.target.classList.contains('heatmap-word')) {
+            // Show enhanced tooltip on hover
+            const quality = parseFloat(event.target.getAttribute('data-quality') || '0');
+            const qualityPercentage = Math.round(quality * 100);
             
-            tooltip.textContent = `${tooltipText} (${score}%)`;
+            // Create tooltip for more information
+            let tooltip = document.getElementById('heatmap-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.id = 'heatmap-tooltip';
+                tooltip.style.position = 'fixed';
+                tooltip.style.padding = '5px 10px';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                tooltip.style.color = 'white';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '12px';
+                tooltip.style.zIndex = '1000';
+                tooltip.style.pointerEvents = 'none';
+                document.body.appendChild(tooltip);
+            }
             
-            // Position tooltip near cursor
-            const rect = span.getBoundingClientRect();
-            const tooltipHeight = tooltip.offsetHeight;
+            // Set tooltip content
+            tooltip.innerHTML = `
+                <div>Quality: ${qualityPercentage}%</div>
+                <div style="font-size: 10px; opacity: 0.8;">Based on confidence scoring</div>
+            `;
             
-            tooltip.style.left = `${rect.left + window.scrollX}px`;
-            tooltip.style.top = `${rect.top - tooltipHeight - 5 + window.scrollY}px`;
-            tooltip.classList.add('show');
+            // Position tooltip
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
+            tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
+            tooltip.style.display = 'block';
         }
     });
     
-    document.addEventListener('mouseout', function(e) {
-        if (e.target.closest('.heatmap-text span')) {
+    document.addEventListener('mouseout', (event) => {
+        if (event.target.classList.contains('heatmap-word')) {
             const tooltip = document.getElementById('heatmap-tooltip');
-            tooltip.classList.remove('show');
-        }
-    });
-}
-
-// Initialize mascot system
-function initializeMascotSystem() {
-    // Create mascot container if it doesn't exist
-    if (!document.getElementById('mascot-container')) {
-        // Create mascot container
-        const mascotContainer = document.createElement('div');
-        mascotContainer.id = 'mascot-container';
-        mascotContainer.className = 'mascot-container';
-        
-        // Create mascot element
-        const mascot = document.createElement('div');
-        mascot.id = 'mascot';
-        mascot.className = 'mascot mascot-default';
-        mascotContainer.appendChild(mascot);
-        
-        // Create speech bubble
-        const speechBubble = document.createElement('div');
-        speechBubble.id = 'mascot-speech';
-        speechBubble.className = 'mascot-speech';
-        mascotContainer.appendChild(speechBubble);
-        
-        // Add to the document
-        document.body.appendChild(mascotContainer);
-        
-        // Add click event to toggle speech bubble
-        mascot.addEventListener('click', () => {
-            speechBubble.classList.toggle('show');
-            
-            // Hide automatically after a while
-            setTimeout(() => {
-                speechBubble.classList.remove('show');
-            }, 5000);
-        });
-    }
-    
-    // Get current mascot and speech elements
-    const mascot = document.getElementById('mascot');
-    const speech = document.getElementById('mascot-speech');
-    
-    // Listen for language change events
-    targetLang.addEventListener('change', () => {
-        updateMascotForLanguage(targetLang.value);
-    });
-    
-    // Initialize with current language
-    updateMascotForLanguage(targetLang.value);
-    
-    // Listen for translation events
-    document.addEventListener('translation:started', (event) => {
-        mascot.className = 'mascot mascot-' + targetLang.value + ' thinking';
-        speech.textContent = getMascotPhrase('thinking', targetLang.value);
-        speech.classList.add('show');
-        
-        // Hide speech after a while
-        setTimeout(() => {
-            speech.classList.remove('show');
-        }, 3000);
-    });
-    
-    document.addEventListener('translation:success', (event) => {
-        mascot.className = 'mascot mascot-' + targetLang.value + ' excited';
-        speech.textContent = getMascotPhrase('success', targetLang.value, event.detail.metrics);
-        speech.classList.add('show');
-        
-        // Hide mascot excitement after a while
-        setTimeout(() => {
-            mascot.className = 'mascot mascot-' + targetLang.value;
-            speech.classList.remove('show');
-        }, 4000);
-    });
-    
-    document.addEventListener('translation:error', (event) => {
-        mascot.className = 'mascot mascot-' + targetLang.value;
-        speech.textContent = getMascotPhrase('error', targetLang.value);
-        speech.classList.add('show');
-        
-        // Hide speech after a while
-        setTimeout(() => {
-            speech.classList.remove('show');
-        }, 4000);
-    });
-    
-    document.addEventListener('translation:textChanged', (event) => {
-        // Only react to significant text
-        if (event.detail.text && event.detail.text.length > 10) {
-            // 20% chance to respond to text changes
-            if (Math.random() < 0.2) {
-                mascot.className = 'mascot mascot-' + targetLang.value + ' active';
-                speech.textContent = getMascotPhrase('ready', targetLang.value);
-                speech.classList.add('show');
-                
-                // Hide after a short delay
-                setTimeout(() => {
-                    mascot.className = 'mascot mascot-' + targetLang.value;
-                    speech.classList.remove('show');
-                }, 3000);
+            if (tooltip) {
+                tooltip.style.display = 'none';
             }
         }
     });
-}
-
-// Update mascot based on language
-function updateMascotForLanguage(langCode) {
-    const mascot = document.getElementById('mascot');
-    const speech = document.getElementById('mascot-speech');
-    
-    // Reset animation class
-    mascot.className = 'mascot';
-    
-    // Set appropriate language class
-    if (['ja', 'zh', 'hi', 'th', 'vi', 'id', 'ms', 'bn', 'fil', 'my', 'km', 'lo'].includes(langCode)) {
-        mascot.classList.add('mascot-' + langCode);
-    } else {
-        mascot.classList.add('mascot-default');
-    }
-    
-    // Show greeting from mascot
-    speech.textContent = getMascotPhrase('greeting', langCode);
-    speech.classList.add('show');
-    
-    // Add bounce animation briefly
-    mascot.classList.add('active');
-    
-    // Hide greeting and animation after a short delay
-    setTimeout(() => {
-        speech.classList.remove('show');
-        mascot.classList.remove('active');
-    }, 3000);
-}
-
-// Get appropriate mascot phrase
-function getMascotPhrase(type, langCode, metrics) {
-    // Language-specific greetings
-    const greetings = {
-        'ja': 'こんにちは！日本語に翻訳するよ！',
-        'zh': '你好！我可以翻译成中文！',
-        'hi': 'नमस्ते! मैं हिंदी में अनुवाद कर सकता हूँ!',
-        'th': 'สวัสดี! ฉันจะแปลเป็นภาษาไทย!',
-        'vi': 'Xin chào! Tôi sẽ dịch sang tiếng Việt!',
-        'id': 'Halo! Saya akan menerjemahkan ke Bahasa Indonesia!',
-        'ms': 'Helo! Saya akan terjemahkan ke Bahasa Melayu!',
-        'bn': 'নমস্কার! আমি বাংলায় অনুবাদ করব!',
-        'fil': 'Kumusta! Isasalin ko sa Filipino!',
-        'my': 'မင်္ဂလာပါ! မြန်မာဘာသာသို့ ဘာသာပြန်မည်!',
-        'km': 'សួស្តី! ខ្ញុំនឹងបកប្រែជាភាសាខ្មែរ!',
-        'lo': 'ສະບາຍດີ! ຂ້ອຍຈະແປເປັນພາສາລາວ!',
-        'default': 'Hello! I\'ll translate for you!'
-    };
-    
-    const thinkingPhrases = {
-        'ja': '翻訳中...',
-        'zh': '翻译中...',
-        'hi': 'अनुवाद हो रहा है...',
-        'th': 'กำลังแปล...',
-        'vi': 'Đang dịch...',
-        'id': 'Sedang menerjemahkan...',
-        'default': 'Translating...'
-    };
-    
-    const successPhrases = {
-        'ja': '翻訳完了！品質: ',
-        'zh': '翻译完成！质量: ',
-        'hi': 'अनुवाद पूरा हुआ! गुणवत्ता: ',
-        'th': 'การแปลเสร็จสิ้น! คุณภาพ: ',
-        'vi': 'Dịch xong! Chất lượng: ',
-        'id': 'Terjemahan selesai! Kualitas: ',
-        'default': 'Translation complete! Quality: '
-    };
-    
-    const errorPhrases = {
-        'ja': 'すみません、エラーが発生しました。',
-        'zh': '抱歉，出现了错误。',
-        'hi': 'क्षमा करें, एक त्रुटि हुई है।',
-        'th': 'ขออภัย เกิดข้อผิดพลาด',
-        'vi': 'Xin lỗi, đã xảy ra lỗi.',
-        'id': 'Maaf, terjadi kesalahan.',
-        'default': 'Sorry, an error occurred.'
-    };
-    
-    const readyPhrases = {
-        'ja': '翻訳する準備ができています！',
-        'zh': '准备好翻译了！',
-        'hi': 'अनुवाद के लिए तैयार!',
-        'th': 'พร้อมแปลแล้ว!',
-        'vi': 'Sẵn sàng để dịch!',
-        'id': 'Siap untuk menerjemahkan!',
-        'default': 'Ready to translate!'
-    };
-    
-    // Get correct phrase map
-    let phraseMap;
-    switch (type) {
-        case 'greeting':
-            phraseMap = greetings;
-            break;
-        case 'thinking':
-            phraseMap = thinkingPhrases;
-            break;
-        case 'success':
-            phraseMap = successPhrases;
-            break;
-        case 'error':
-            phraseMap = errorPhrases;
-            break;
-        case 'ready':
-            phraseMap = readyPhrases;
-            break;
-        default:
-            return 'Hello!';
-    }
-    
-    // Get phrase for current language or default
-    let phrase = phraseMap[langCode] || phraseMap['default'];
-    
-    // For success, add quality rating
-    if (type === 'success' && metrics) {
-        let qualityLabel = '';
-        if (metrics.quality >= 0.7) qualityLabel = '★★★★★';
-        else if (metrics.quality >= 0.5) qualityLabel = '★★★★☆';
-        else if (metrics.quality >= 0.3) qualityLabel = '★★★☆☆';
-        else qualityLabel = '★★☆☆☆';
-        
-        phrase += qualityLabel;
-    }
-    
-    return phrase;
 }

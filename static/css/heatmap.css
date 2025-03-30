@@ -1,131 +1,207 @@
-/* Translation Quality Heatmap CSS */
+/* Enhanced Translation Quality Heatmap CSS */
 
 .heatmap-text {
-    line-height: 1.5;
+    line-height: 1.6;
     position: relative;
+    margin-bottom: 5px;
+    padding: 8px 0;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
 }
 
-.heatmap-text span {
+/* Word styling */
+.heatmap-word {
     position: relative;
-    cursor: default;
-    transition: background-color 0.2s ease;
+    cursor: help;
+    transition: all 0.25s ease;
+    padding: 2px 3px;
+    margin: 0 -1px;
+    border-radius: 3px;
+    display: inline-block;
 }
 
-/* Heatmap levels */
+/* Heatmap quality levels with enhanced styling */
 .quality-excellent {
-    background-color: rgba(46, 204, 113, 0.15);
-    border-bottom: 1px solid rgba(46, 204, 113, 0.3);
+    background-color: rgba(40, 167, 69, 0.1);
+    border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+    color: rgba(40, 167, 69, 1);
 }
 
 .quality-good {
-    background-color: rgba(52, 152, 219, 0.15);
-    border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+    background-color: rgba(23, 162, 184, 0.1);
+    border-bottom: 1px solid rgba(23, 162, 184, 0.2);
+    color: rgba(23, 162, 184, 1);
 }
 
 .quality-fair {
-    background-color: rgba(241, 196, 15, 0.15);
-    border-bottom: 1px solid rgba(241, 196, 15, 0.3);
+    background-color: rgba(255, 193, 7, 0.1);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+    color: rgba(255, 193, 7, 1);
 }
 
 .quality-poor {
-    background-color: rgba(231, 76, 60, 0.15);
-    border-bottom: 1px solid rgba(231, 76, 60, 0.3);
+    background-color: rgba(220, 53, 69, 0.1);
+    border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+    color: rgba(220, 53, 69, 1);
 }
 
-/* Hover effects */
-.heatmap-text span:hover {
-    z-index: 10;
+/* Enhanced hover effects */
+.heatmap-text .heatmap-word:hover {
+    z-index: 100;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .quality-excellent:hover {
-    background-color: rgba(46, 204, 113, 0.25);
+    background-color: rgba(40, 167, 69, 0.2);
+    border-bottom-color: rgba(40, 167, 69, 0.4);
 }
 
 .quality-good:hover {
-    background-color: rgba(52, 152, 219, 0.25);
+    background-color: rgba(23, 162, 184, 0.2);
+    border-bottom-color: rgba(23, 162, 184, 0.4);
 }
 
 .quality-fair:hover {
-    background-color: rgba(241, 196, 15, 0.25);
+    background-color: rgba(255, 193, 7, 0.2);
+    border-bottom-color: rgba(255, 193, 7, 0.4);
 }
 
 .quality-poor:hover {
-    background-color: rgba(231, 76, 60, 0.25);
+    background-color: rgba(220, 53, 69, 0.2);
+    border-bottom-color: rgba(220, 53, 69, 0.4);
 }
 
-/* Tooltip */
+/* Enhance visual feedback when clicking words */
+.heatmap-word:active {
+    transform: translateY(0px) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Enhanced tooltip with animation and design */
 .heatmap-tooltip {
     position: absolute;
-    background: rgba(40, 40, 40, 0.95);
+    background: rgba(25, 25, 35, 0.95);
     color: #fff;
-    padding: 6px 10px;
-    border-radius: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
     font-size: 0.75rem;
+    min-width: 120px;
     max-width: 200px;
     z-index: 1000;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transform: translateY(5px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
 }
 
-.heatmap-tooltip.show {
+.heatmap-tooltip.show, 
+.heatmap-tooltip[style*="display: block"] {
     opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
-/* Heatmap legend */
+/* Tooltip arrow */
+.heatmap-tooltip:after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(25, 25, 35, 0.95);
+}
+
+/* Enhanced heatmap legend with modern design */
 .heatmap-legend {
     margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 8px;
-    background: rgba(30, 30, 30, 0.2);
+    gap: 3px 12px;
+    background: transparent;
     color: var(--bs-secondary);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .legend-item {
     display: flex;
     align-items: center;
     gap: 4px;
+    padding: 3px 0;
+    transition: transform 0.2s ease;
+}
+
+.legend-item:hover {
+    transform: translateY(-1px);
 }
 
 .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .legend-label {
     white-space: nowrap;
+    font-size: 0.7rem;
+    opacity: 0.9;
 }
 
-.legend-excellent {
-    background-color: rgba(46, 204, 113, 0.6);
+/* Match colors with the quality classes */
+.quality-excellent, .legend-excellent {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-color: rgba(40, 167, 69, 0.4);
+    color: rgba(40, 167, 69, 1);
 }
 
-.legend-good {
-    background-color: rgba(52, 152, 219, 0.6);
+.quality-good, .legend-good {
+    background-color: rgba(23, 162, 184, 0.2);
+    border-color: rgba(23, 162, 184, 0.4);
+    color: rgba(23, 162, 184, 1);
 }
 
-.legend-fair {
-    background-color: rgba(241, 196, 15, 0.6);
+.quality-fair, .legend-fair {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: rgba(255, 193, 7, 1);
 }
 
-.legend-poor {
-    background-color: rgba(231, 76, 60, 0.6);
+.quality-poor, .legend-poor {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.4);
+    color: rgba(220, 53, 69, 1);
 }
 
 .heatmap-legend-title {
     font-size: 0.75rem;
-    margin-right: 8px;
+    margin-right: 10px;
+    opacity: 0.75;
+    font-weight: 500;
+}
+
+/* Info tooltip for legend */
+.legend-info {
+    margin-left: 10px;
+    font-size: 0.7rem;
+    font-style: italic;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.heatmap-legend:hover .legend-info {
     opacity: 0.9;
 }
