@@ -48,10 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     targetLang.addEventListener('change', () => {
         const lang = targetLang.value;
         
-        // Dispatch language change event for mascot
-        document.dispatchEvent(new CustomEvent('translation:languageChanged', {
-            detail: { language: lang }
-        }));
+        // Language changed event
         
         if (sourceText.value.trim()) {
             translateText();
