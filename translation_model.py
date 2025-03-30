@@ -386,7 +386,9 @@ class TranslationModel:
             target_lang (str): Target language code (e.g., 'ja', 'zh', 'hi')
             
         Returns:
-            str: Translated text
+            tuple: (translated_text, confidence_score)
+                - translated_text (str): The translated text
+                - confidence_score (float): Confidence score between 0.0 and 1.0
         """
         try:
             # Simulate AI model processing time
@@ -396,25 +398,38 @@ class TranslationModel:
             # Default to Japanese if target language is not supported
             if target_lang not in self.common_phrases:
                 target_lang = "ja"
+            
+            # Initialize confidence score
+            confidence_score = 0.0
                 
             # For short inputs, check if we have an exact match
             if text in self.common_phrases[target_lang]:
-                return self.common_phrases[target_lang][text]
+                # Exact match gives high confidence
+                return self.common_phrases[target_lang][text], 0.98
             
             # Check if our text matches any ALT examples closely
             for i, example in enumerate(self.alt_examples["en"]):
-                if self._similarity_score(text.lower(), example.lower()) > 0.7:
+                similarity = self._similarity_score(text.lower(), example.lower())
+                if similarity > 0.7:
                     # Return the corresponding translation from the ALT dataset
-                    return self.alt_examples[target_lang][i]
+                    # Confidence score based on similarity (0.7 to 1.0 mapped to 0.8 to 0.95)
+                    confidence = 0.8 + (similarity - 0.7) * 0.5
+                    return self.alt_examples[target_lang][i], min(0.95, confidence)
             
             # Break text into sentences
             sentences = re.split(r'(?<=[.!?])\s+', text)
             translated_sentences = []
             
+            # Track matched words/phrases for confidence calculation
+            total_words = 0
+            matched_words = 0
+            
             for sentence in sentences:
                 # For each sentence, try to translate using phrase-based approach
                 words = sentence.split()
                 result = []
+                
+                total_words += len(words)
                 
                 i = 0
                 while i < len(words):
@@ -424,6 +439,7 @@ class TranslationModel:
                         phrase = " ".join(words[i:i+j])
                         if phrase in self.common_phrases[target_lang]:
                             result.append(self.common_phrases[target_lang][phrase])
+                            matched_words += j  # Count all words in the matched phrase
                             i += j
                             found = True
                             break
@@ -432,6 +448,7 @@ class TranslationModel:
                     if not found:
                         if words[i].lower() in self.common_phrases[target_lang]:
                             result.append(self.common_phrases[target_lang][words[i].lower()])
+                            matched_words += 1
                         else:
                             # If word not found, keep original but adapt to target language characteristics
                             result.append(self._adapt_unknown_word(words[i], target_lang))
@@ -450,11 +467,37 @@ class TranslationModel:
             # Apply language-specific post-processing
             final_translation = self._post_process_translation(final_translation, target_lang)
             
-            return final_translation
+            # Calculate confidence score based on the ratio of matched words
+            # and the complexity of the translation
+            if total_words > 0:
+                # Base confidence on matched words ratio
+                base_confidence = matched_words / total_words
+                
+                # Adjust for text complexity (longer texts tend to have lower confidence)
+                complexity_factor = 1.0 - (min(len(text), 500) / 1000)  # 0-500 chars: 1.0-0.5
+                
+                # Adjust for target language (some languages have better training data)
+                language_factor = 1.0
+                if target_lang in ["ja", "zh", "hi"]:  # Major languages with more data
+                    language_factor = 0.95
+                elif target_lang in ["bn", "th", "vi"]:  # Medium data availability
+                    language_factor = 0.85
+                else:  # Less data available
+                    language_factor = 0.75
+                
+                # Combine factors for final confidence score
+                confidence_score = base_confidence * complexity_factor * language_factor
+                
+                # Ensure confidence is within bounds and has reasonable floor
+                confidence_score = max(0.3, min(0.95, confidence_score))
+            else:
+                confidence_score = 0.5  # Default for empty text
+            
+            return final_translation, confidence_score
             
         except Exception as e:
             logger.error(f"Translation error: {str(e)}")
-            return f"Translation error: {str(e)}"
+            return f"Translation error: {str(e)}", 0.0
     
     def _similarity_score(self, text1, text2):
         """

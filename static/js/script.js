@@ -132,8 +132,8 @@ async function translateText() {
             return;
         }
         
-        // Display the translation result
-        displayTranslation(data.translation);
+        // Display the translation result with confidence score
+        displayTranslation(data.translation, data.confidence);
         
         // Show model info
         if (data.model === 'mbart') {
@@ -176,7 +176,7 @@ function showModelInfo(message, color) {
 }
 
 // Function to display the translation result
-function displayTranslation(translation) {
+function displayTranslation(translation, confidence) {
     translationResult.textContent = translation;
     translationResult.classList.add('show');
     
@@ -185,6 +185,50 @@ function displayTranslation(translation) {
     setTimeout(() => {
         translationResult.style.backgroundColor = '';
     }, 300);
+    
+    // Display confidence indicator if provided
+    if (confidence !== undefined) {
+        const confidenceElement = document.createElement('div');
+        confidenceElement.className = 'confidence-indicator';
+        
+        // Determine confidence color and label
+        let confidenceColor, confidenceLabel;
+        if (confidence >= 0.85) {
+            confidenceColor = 'var(--bs-success)';
+            confidenceLabel = 'High';
+        } else if (confidence >= 0.65) {
+            confidenceColor = 'var(--bs-info)';
+            confidenceLabel = 'Medium';
+        } else {
+            confidenceColor = 'var(--bs-warning)';
+            confidenceLabel = 'Low';
+        }
+        
+        // Create a progress bar for the confidence score
+        const confidenceValue = Math.round(confidence * 100);
+        confidenceElement.innerHTML = `
+            <div class="confidence-text" style="margin-top: 15px; font-size: 0.85rem;">
+                <span style="color: ${confidenceColor}; font-weight: 500;">
+                    ${confidenceLabel} confidence (${confidenceValue}%)
+                </span>
+            </div>
+            <div class="progress mt-1" style="height: 4px; width: 100%;">
+                <div class="progress-bar" role="progressbar" 
+                    style="width: ${confidenceValue}%; background-color: ${confidenceColor};" 
+                    aria-valuenow="${confidenceValue}" aria-valuemin="0" aria-valuemax="100">
+                </div>
+            </div>
+        `;
+        
+        // Replace any existing confidence indicator
+        const existingConfidence = document.querySelector('.confidence-indicator');
+        if (existingConfidence) {
+            existingConfidence.remove();
+        }
+        
+        // Add after translation result
+        translationResult.parentNode.appendChild(confidenceElement);
+    }
 }
 
 // Function to clear the text and results
@@ -200,6 +244,12 @@ function clearText() {
     const modelInfo = document.querySelector('.model-info');
     if (modelInfo) {
         modelInfo.remove();
+    }
+    
+    // Clear confidence indicator if present
+    const confidenceIndicator = document.querySelector('.confidence-indicator');
+    if (confidenceIndicator) {
+        confidenceIndicator.remove();
     }
     
     updateUIState();

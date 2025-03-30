@@ -71,8 +71,17 @@ def translate():
                 
                 if mbart_translator.is_model_loaded():
                     logger.debug(f"Using mBART model for translation to {target_lang}")
-                    translated_text = mbart_translator.translate(text, target_lang)
-                    return jsonify({'translation': translated_text, 'model': 'mbart'})
+                    translated_text, confidence_score = mbart_translator.translate(text, target_lang)
+                    
+                    # Format confidence score as percentage with 1 decimal place
+                    confidence_percentage = round(confidence_score * 100, 1)
+                    
+                    return jsonify({
+                        'translation': translated_text, 
+                        'model': 'mbart',
+                        'confidence': confidence_score,
+                        'confidence_percentage': confidence_percentage
+                    })
                 else:
                     logger.warning("mBART model failed to load, falling back to legacy model")
             except Exception as e:
@@ -86,9 +95,17 @@ def translate():
             translation_model = TranslationModel()
         
         # Translate the text using legacy model
-        translated_text = translation_model.translate(text, target_lang)
+        translated_text, confidence_score = translation_model.translate(text, target_lang)
         
-        return jsonify({'translation': translated_text, 'model': 'legacy'})
+        # Format confidence score as percentage with 1 decimal place
+        confidence_percentage = round(confidence_score * 100, 1)
+        
+        return jsonify({
+            'translation': translated_text, 
+            'model': 'legacy',
+            'confidence': confidence_score,
+            'confidence_percentage': confidence_percentage
+        })
     
     except Exception as e:
         logger.error(f"Translation error: {str(e)}")

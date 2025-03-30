@@ -86,11 +86,13 @@ class MBartTranslator:
             target_lang: Target language code
             
         Returns:
-            Translated text
+            tuple: (translated_text, confidence_score)
+                - translated_text (str): The translated text
+                - confidence_score (float): Confidence score between 0.0 and 1.0
         """
         if not self.model or not self.tokenizer:
             logger.warning("mBART model not loaded, cannot translate")
-            return None
+            return None, 0.0
         
         try:
             # Set the source language
@@ -100,24 +102,68 @@ class MBartTranslator:
             if target_lang not in MBART_LANG_MAP:
                 logger.warning(f"Target language {target_lang} not supported by mBART, defaulting to Japanese")
                 target_lang = 'ja'
+                target_confidence_factor = 0.7  # Lower confidence for fallback language
+            else:
+                # Adjust confidence factor based on language support in mBART
+                if MBART_LANG_MAP[target_lang] == "en_XX":  # Using English as fallback
+                    target_confidence_factor = 0.7
+                else:
+                    target_confidence_factor = 0.9
             
             # Tokenize the text
             inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
             
-            # Generate translation
+            # Generate translation with beam search to get better quality and score
             translated_tokens = self.model.generate(
                 **inputs,
                 forced_bos_token_id=self.tokenizer.lang_code_to_id[MBART_LANG_MAP[target_lang]],
-                max_length=128
+                max_length=128,
+                num_beams=5,  # Use beam search
+                num_return_sequences=1,
+                length_penalty=1.0,
+                early_stopping=True,
+                return_dict_in_generate=True,
+                output_scores=True  # Get generation scores
             )
             
             # Decode the tokens
-            translation = self.tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
+            translation = self.tokenizer.batch_decode(translated_tokens.sequences, skip_special_tokens=True)[0]
             
-            return translation
+            # Calculate confidence score based on the model's output scores
+            # Higher scores indicate higher confidence
+            try:
+                # Extract raw scores from the model output
+                if hasattr(translated_tokens, "sequences_scores"):
+                    # Get the sequence score (log probability)
+                    log_prob = translated_tokens.sequences_scores[0].item()
+                    
+                    # Convert log probability to a confidence score between 0 and 1
+                    # log_prob is negative, with values closer to 0 indicating higher confidence
+                    # Map typical range of log_prob (-10 to 0) to confidence range (0.5 to 0.98)
+                    raw_confidence = 0.5 + min(0.48, max(0, (10 + log_prob) / 20))
+                    
+                    # Adjust for text length (longer texts are harder to translate well)
+                    length_factor = max(0.8, min(1.0, 100 / max(len(text), 10)))
+                    
+                    # Apply language and length factors
+                    confidence_score = raw_confidence * target_confidence_factor * length_factor
+                    
+                    # Ensure confidence is within reasonable bounds
+                    confidence_score = max(0.4, min(0.98, confidence_score))
+                else:
+                    # Fallback if scores not available
+                    # Base confidence on target language and text length
+                    text_length_factor = max(0.7, min(1.0, 200 / max(len(text), 10)))
+                    confidence_score = 0.75 * target_confidence_factor * text_length_factor
+            except Exception as score_err:
+                logger.warning(f"Error calculating confidence score: {str(score_err)}")
+                confidence_score = 0.7 * target_confidence_factor  # Default fallback
+            
+            return translation, confidence_score
+            
         except Exception as e:
             logger.error(f"Translation error: {str(e)}")
-            return f"Translation error: {str(e)}"
+            return f"Translation error: {str(e)}", 0.0
     
     def is_model_loaded(self):
         """Check if the mBART model is loaded"""
