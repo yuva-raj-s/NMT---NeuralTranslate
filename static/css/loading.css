@@ -1,0 +1,287 @@
+/* Loading Animation Styles for Neural Translation Application */
+
+/* Loading container */
+.loading-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 10;
+}
+
+.loading-container.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Neural network loader animation */
+.neural-loader {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Concentric circles representing neural layers */
+.circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(66, 133, 244, 0.5);
+    animation: pulse 2s ease-out infinite;
+}
+
+.circle:nth-child(1) {
+    width: 30px;
+    height: 30px;
+    animation-delay: 0s;
+}
+
+.circle:nth-child(2) {
+    width: 50px;
+    height: 50px;
+    animation-delay: 0.3s;
+}
+
+.circle:nth-child(3) {
+    width: 70px;
+    height: 70px;
+    animation-delay: 0.6s;
+}
+
+.circle:nth-child(4) {
+    width: 90px;
+    height: 90px;
+    animation-delay: 0.9s;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+}
+
+/* Neural network nodes (dots) */
+.dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: var(--bs-info);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--bs-info);
+}
+
+.dot:nth-child(5) {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: dot-pulse 1.5s ease-in-out infinite, dot-travel 8s linear infinite;
+}
+
+.dot:nth-child(6) {
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    animation: dot-pulse 1.5s ease-in-out infinite 0.3s, dot-travel 8s linear infinite 2s;
+}
+
+.dot:nth-child(7) {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: dot-pulse 1.5s ease-in-out infinite 0.6s, dot-travel 8s linear infinite 4s;
+}
+
+.dot:nth-child(8) {
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    animation: dot-pulse 1.5s ease-in-out infinite 0.9s, dot-travel 8s linear infinite 6s;
+}
+
+@keyframes dot-pulse {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translateX(-50%) scale(1.5);
+        opacity: 1;
+    }
+}
+
+@keyframes dot-travel {
+    0% {
+        transform: rotate(0deg) translateX(35px) rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg) translateX(35px) rotate(-360deg);
+    }
+}
+
+/* Core element at center */
+.core {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--bs-info);
+    animation: core-pulse 2s ease-in-out infinite;
+}
+
+@keyframes core-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px var(--bs-info);
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 25px var(--bs-info);
+    }
+}
+
+/* Loading text */
+.loading-text {
+    margin-top: 20px;
+    color: var(--bs-info);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-align: center;
+    animation: text-fade 2s infinite;
+}
+
+@keyframes text-fade {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Translation progress bar */
+.translation-progress {
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+.translation-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, var(--bs-info), var(--bs-primary));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Wave animation */
+.wave-animation {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(66, 133, 244, 0.3), transparent);
+    top: 0;
+}
+
+.wave:nth-child(1) {
+    animation: wave 3s linear infinite;
+    left: -50%;
+}
+
+.wave:nth-child(2) {
+    animation: wave 3s linear infinite reverse;
+    animation-delay: 1.5s;
+    left: -50%;
+}
+
+@keyframes wave {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50%); }
+}
+
+/* Hide original loading spinner when using custom loader */
+.loading-container.active + #loading-spinner {
+    display: none !important;
+}
+
+/* Media queries for responsive loading animation */
+@media (max-width: 768px) {
+    .loading-container {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .neural-loader {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .circle:nth-child(1) { width: 25px; height: 25px; }
+    .circle:nth-child(2) { width: 40px; height: 40px; }
+    .circle:nth-child(3) { width: 60px; height: 60px; }
+    .circle:nth-child(4) { width: 75px; height: 75px; }
+    
+    .core {
+        width: 15px;
+        height: 15px;
+    }
+    
+    .dot {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .loading-text {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .loading-container {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .neural-loader {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .circle:nth-child(1) { width: 20px; height: 20px; }
+    .circle:nth-child(2) { width: 35px; height: 35px; }
+    .circle:nth-child(3) { width: 50px; height: 50px; }
+    .circle:nth-child(4) { width: 65px; height: 65px; }
+    
+    .loading-text {
+        font-size: 11px;
+        margin-top: 15px;
+    }
+}

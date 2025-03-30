@@ -46,6 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Auto-trigger translation when language changes
     targetLang.addEventListener('change', () => {
+        const lang = targetLang.value;
+        
+        // Dispatch language change event for mascot
+        document.dispatchEvent(new CustomEvent('translation:languageChanged', {
+            detail: { language: lang }
+        }));
+        
         if (sourceText.value.trim()) {
             translateText();
         }
@@ -58,12 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Function to handle source text input
 function handleSourceTextInput() {
     // Update character count
-    const textLength = sourceText.value.length;
+    const text = sourceText.value;
+    const textLength = text.length;
     sourceCharCount.textContent = `${textLength}/${MAX_CHARS}`;
     
     // Validate max length
     if (textLength > MAX_CHARS) {
-        sourceText.value = sourceText.value.substring(0, MAX_CHARS);
+        sourceText.value = text.substring(0, MAX_CHARS);
         sourceCharCount.textContent = `${MAX_CHARS}/${MAX_CHARS}`;
         sourceCharCount.style.color = '#f44336';
     } else {
@@ -72,6 +80,11 @@ function handleSourceTextInput() {
     
     // Update UI state
     updateUIState();
+    
+    // Notify mascot of text change
+    document.dispatchEvent(new CustomEvent('translation:textChanged', {
+        detail: { text: text }
+    }));
     
     // Auto-translate if text length is reasonable
     if (textLength > 0 && textLength <= 100) {
@@ -100,6 +113,17 @@ async function translateText() {
         showLoading(true);
         hideError();
         
+        // Dispatch event for mascot interaction
+        document.dispatchEvent(new CustomEvent('translation:started', {
+            detail: {
+                text: text,
+                targetLang: lang
+            }
+        }));
+        
+        // Show translation loading progress
+        startProgressSimulation();
+        
         // Send the translation request to the backend
         const response = await fetch('/translate', {
             method: 'POST',
@@ -115,25 +139,52 @@ async function translateText() {
         // Parse the response
         const data = await response.json();
         
-        // Hide loading state
-        showLoading(false);
+        // Complete the progress bar
+        completeProgress();
         
-        // Check for errors
-        if (!response.ok || data.error) {
-            showError(data.error || 'Translation failed. Please try again.');
-            return;
-        }
-        
-        // Display the translation result with evaluation metrics
-        displayTranslation(data.translation, data.metrics, data.percentages);
-        
-        // Show model info
-        showModelInfo('Using mBART neural model with industry-standard metrics', 'var(--bs-info)');
+        // Hide loading state after short delay for animation
+        setTimeout(() => {
+            showLoading(false);
+            
+            // Check for errors
+            if (!response.ok || data.error) {
+                showError(data.error || 'Translation failed. Please try again.');
+                
+                // Dispatch error event for mascot
+                document.dispatchEvent(new CustomEvent('translation:error', {
+                    detail: {
+                        error: data.error || 'Translation failed'
+                    }
+                }));
+                return;
+            }
+            
+            // Display the translation result with evaluation metrics
+            displayTranslation(data.translation, data.metrics, data.percentages);
+            
+            // Show model info
+            showModelInfo('Using mBART neural model with industry-standard metrics', 'var(--bs-info)');
+            
+            // Dispatch success event for mascot
+            document.dispatchEvent(new CustomEvent('translation:success', {
+                detail: {
+                    translation: data.translation,
+                    metrics: data.metrics
+                }
+            }));
+        }, 500);
         
     } catch (error) {
         showLoading(false);
         showError('An error occurred. Please try again later.');
         console.error('Translation error:', error);
+        
+        // Dispatch error event for mascot
+        document.dispatchEvent(new CustomEvent('translation:error', {
+            detail: {
+                error: 'An error occurred'
+            }
+        }));
     }
 }
 
@@ -324,15 +375,124 @@ function clearText() {
     updateUIState();
 }
 
-// Function to show/hide loading state
+// Function to show/hide enhanced loading state
 function showLoading(isLoading) {
+    // Get or create loading container
+    let loadingContainer = document.querySelector('.loading-container');
+    
+    if (!loadingContainer) {
+        // Create the enhanced loading animation container
+        loadingContainer = document.createElement('div');
+        loadingContainer.className = 'loading-container';
+        
+        // Create neural network loader
+        const neuralLoader = document.createElement('div');
+        neuralLoader.className = 'neural-loader';
+        
+        // Create concentric circles
+        for (let i = 0; i < 4; i++) {
+            const circle = document.createElement('div');
+            circle.className = 'circle';
+            neuralLoader.appendChild(circle);
+        }
+        
+        // Create neural network dots
+        for (let i = 0; i < 4; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            neuralLoader.appendChild(dot);
+        }
+        
+        // Create center core
+        const core = document.createElement('div');
+        core.className = 'core';
+        neuralLoader.appendChild(core);
+        
+        // Create loading text
+        const loadingText = document.createElement('div');
+        loadingText.className = 'loading-text';
+        loadingText.textContent = 'Translating...';
+        
+        // Create progress bar
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'translation-progress';
+        
+        const progressBar = document.createElement('div');
+        progressBar.className = 'translation-progress-bar';
+        progressContainer.appendChild(progressBar);
+        
+        // Create wave animation
+        const waveContainer = document.createElement('div');
+        waveContainer.className = 'wave-animation';
+        
+        const wave1 = document.createElement('div');
+        wave1.className = 'wave';
+        
+        const wave2 = document.createElement('div');
+        wave2.className = 'wave';
+        
+        waveContainer.appendChild(wave1);
+        waveContainer.appendChild(wave2);
+        
+        // Assemble loading container
+        loadingContainer.appendChild(neuralLoader);
+        loadingContainer.appendChild(loadingText);
+        loadingContainer.appendChild(progressContainer);
+        loadingContainer.appendChild(waveContainer);
+        
+        // Add to translation result container
+        document.querySelector('.text-container:nth-child(2)').appendChild(loadingContainer);
+    }
+    
+    // Update loading state
     if (isLoading) {
-        loadingSpinner.style.display = 'block';
+        loadingContainer.classList.add('active');
         translateBtn.disabled = true;
     } else {
-        loadingSpinner.style.display = 'none';
+        loadingContainer.classList.remove('active');
         translateBtn.disabled = false;
     }
+}
+
+// Progress bar simulation
+let progressInterval = null;
+
+function startProgressSimulation() {
+    const progressBar = document.querySelector('.translation-progress-bar');
+    if (!progressBar) return;
+    
+    // Reset progress
+    let progress = 0;
+    progressBar.style.width = '0%';
+    
+    // Clear any existing interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
+    // Start progress simulation
+    progressInterval = setInterval(() => {
+        if (progress < 90) {
+            // Simulate slower progress as we get closer to 90%
+            const increment = progress < 30 ? 5 : (progress < 60 ? 3 : 1);
+            progress += increment;
+            progressBar.style.width = `${progress}%`;
+        }
+    }, 200);
+}
+
+function completeProgress() {
+    const progressBar = document.querySelector('.translation-progress-bar');
+    if (!progressBar) return;
+    
+    // Clear interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    
+    // Complete progress to 100%
+    progressBar.style.width = '100%';
 }
 
 // Function to show error message
