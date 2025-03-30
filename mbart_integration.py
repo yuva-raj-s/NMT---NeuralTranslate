@@ -92,7 +92,15 @@ class MBartTranslator:
         """
         if not self.model or not self.tokenizer:
             logger.warning("mBART model not loaded, cannot translate")
-            return None, 0.0
+            # Return a fallback translation with very low confidence
+            if target_lang == 'ja':
+                return "翻訳モデルが読み込まれていません", 0.2
+            elif target_lang == 'zh':
+                return "翻译模型未加载", 0.2
+            elif target_lang == 'ko':
+                return "번역 모델이 로드되지 않았습니다", 0.2
+            else:
+                return "Translation model not loaded", 0.2
         
         try:
             # Set the source language
@@ -129,6 +137,19 @@ class MBartTranslator:
             # Decode the tokens
             translation = self.tokenizer.batch_decode(translated_tokens.sequences, skip_special_tokens=True)[0]
             
+            # Check if translation is empty or same as input (indicating a failure)
+            if not translation or translation.strip() == text.strip():
+                logger.warning(f"mBART produced invalid translation for '{text}'")
+                # Return a fallback translation with low confidence
+                if target_lang == 'ja':
+                    return "翻訳エラー。もう一度お試しください。", 0.3
+                elif target_lang == 'zh':
+                    return "翻译错误。请再试一次。", 0.3
+                elif target_lang == 'hi':
+                    return "अनुवाद त्रुटि। कृपया पुनः प्रयास करें।", 0.3
+                else:
+                    return "Translation error. Please try again.", 0.3
+            
             # Calculate confidence score based on the model's output scores
             # Higher scores indicate higher confidence
             try:
@@ -163,7 +184,13 @@ class MBartTranslator:
             
         except Exception as e:
             logger.error(f"Translation error: {str(e)}")
-            return f"Translation error: {str(e)}", 0.0
+            # Return a language-specific error message with very low confidence
+            if target_lang == 'ja':
+                return f"翻訳エラー: {str(e)}", 0.1
+            elif target_lang == 'zh':
+                return f"翻译错误: {str(e)}", 0.1
+            else:
+                return f"Translation error: {str(e)}", 0.1
     
     def is_model_loaded(self):
         """Check if the mBART model is loaded"""

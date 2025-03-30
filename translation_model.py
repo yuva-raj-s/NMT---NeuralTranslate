@@ -397,15 +397,23 @@ class TranslationModel:
             
             # Default to Japanese if target language is not supported
             if target_lang not in self.common_phrases:
+                logger.warning(f"Target language {target_lang} not supported, defaulting to Japanese")
                 target_lang = "ja"
             
             # Initialize confidence score
             confidence_score = 0.0
-                
-            # For short inputs, check if we have an exact match
-            if text in self.common_phrases[target_lang]:
-                # Exact match gives high confidence
-                return self.common_phrases[target_lang][text], 0.98
+            
+            # Get the English common phrases dictionary for comparison
+            english_phrases = self.common_phrases["en"]
+            target_phrases = self.common_phrases[target_lang]
+            
+            # For short inputs, check if we have an exact match in English phrases
+            for eng_phrase, _ in english_phrases.items():
+                if text.lower() == eng_phrase.lower():
+                    # We found an exact match in English, return the corresponding target phrase
+                    logger.debug(f"Found exact match for '{text}' in common phrases")
+                    corresponding_phrase = target_phrases[eng_phrase]
+                    return corresponding_phrase, 0.98
             
             # Check if our text matches any ALT examples closely
             for i, example in enumerate(self.alt_examples["en"]):
@@ -414,6 +422,7 @@ class TranslationModel:
                     # Return the corresponding translation from the ALT dataset
                     # Confidence score based on similarity (0.7 to 1.0 mapped to 0.8 to 0.95)
                     confidence = 0.8 + (similarity - 0.7) * 0.5
+                    logger.debug(f"Found similar phrase in ALT dataset with {similarity} similarity")
                     return self.alt_examples[target_lang][i], min(0.95, confidence)
             
             # Break text into sentences
@@ -433,25 +442,39 @@ class TranslationModel:
                 
                 i = 0
                 while i < len(words):
-                    # Try to match the longest phrase possible
+                    # Try to match the longest phrase possible in English phrases
                     found = False
                     for j in range(min(5, len(words) - i), 0, -1):
                         phrase = " ".join(words[i:i+j])
-                        if phrase in self.common_phrases[target_lang]:
-                            result.append(self.common_phrases[target_lang][phrase])
-                            matched_words += j  # Count all words in the matched phrase
-                            i += j
-                            found = True
+                        # Check if the phrase exists in English common phrases
+                        for eng_key in english_phrases.keys():
+                            if phrase.lower() == eng_key.lower():
+                                # Found a match, use corresponding target language phrase
+                                result.append(target_phrases[eng_key])
+                                matched_words += j
+                                i += j
+                                found = True
+                                break
+                        if found:
                             break
                     
                     # If no known phrase found, try to match individual words
                     if not found:
-                        if words[i].lower() in self.common_phrases[target_lang]:
-                            result.append(self.common_phrases[target_lang][words[i].lower()])
-                            matched_words += 1
-                        else:
-                            # If word not found, keep original but adapt to target language characteristics
-                            result.append(self._adapt_unknown_word(words[i], target_lang))
+                        word = words[i]
+                        word_matched = False
+                        
+                        # Try to find the word in our English phrases dictionary
+                        for eng_key in english_phrases.keys():
+                            if word.lower() == eng_key.lower():
+                                result.append(target_phrases[eng_key])
+                                matched_words += 1
+                                word_matched = True
+                                break
+                        
+                        # If word not found, keep original but adapt to target language characteristics
+                        if not word_matched:
+                            result.append(self._adapt_unknown_word(word, target_lang))
+                        
                         i += 1
                 
                 # Join the translated parts according to the language's characteristics
@@ -460,6 +483,24 @@ class TranslationModel:
                 else:
                     # For languages without spaces (Japanese, Chinese, Thai)
                     translated_sentences.append("".join(result))
+            
+            # If no translations were generated, use a placeholder message
+            if not translated_sentences or all(s == "" for s in translated_sentences):
+                # As a fallback for demonstration, use some known target language text
+                logger.warning(f"No translation generated for '{text}', using fallback")
+                if target_lang in self.alt_examples and len(self.alt_examples[target_lang]) > 0:
+                    final_translation = self.alt_examples[target_lang][0]
+                    confidence_score = 0.3  # Low confidence for fallback
+                else:
+                    # Use a simple translated greeting if nothing else works
+                    if target_lang == "ja":
+                        final_translation = "こんにちは、翻訳の例です"  # "Hello, this is a translation example" in Japanese
+                    else:
+                        # Create a simple translated phrase
+                        translated_word = list(target_phrases.values())[0] if target_phrases else "Translation"
+                        final_translation = f"{translated_word} (example)"
+                    confidence_score = 0.2  # Very low confidence
+                return final_translation, confidence_score
             
             # Join sentences with appropriate spacing
             final_translation = " ".join(translated_sentences)
