@@ -1,0 +1,80 @@
+/* Custom styles for the Neural Machine Translation app */
+
+/* Additional spacing for content areas */
+.content-area {
+    padding: 20px 0;
+}
+
+/* Styling for the text areas */
+.form-control {
+    border-radius: 0.25rem;
+}
+
+/* Styling for the translation result container */
+#translation-container {
+    border-left: 4px solid var(--bs-primary);
+    padding-left: 15px;
+    margin-top: 20px;
+    display: none;
+}
+
+/* Error message styling */
+#error-container {
+    display: none;
+    padding: 10px;
+    color: var(--bs-danger);
+    border-left: 4px solid var(--bs-danger);
+    margin-bottom: 20px;
+}
+
+/* Loading spinner styling */
+#loading-spinner {
+    display: none;
+    margin-left: 10px;
+}
+
+/* Improved textarea styling */
+textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Footer styling */
+.footer {
+    margin-top: 50px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+/* Language selection dropdown */
+#target-lang {
+    min-width: 200px;
+}
+
+/* App title styling */
+.app-title {
+    font-weight: 300;
+    margin-bottom: 30px;
+}
+
+/* Button spacing */
+.btn {
+    margin-right: 10px;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    #target-lang {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .app-title {
+        font-size: 1.8rem;
+    }
+}
