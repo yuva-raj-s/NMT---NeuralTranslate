@@ -14,15 +14,21 @@ app.secret_key = os.environ.get("SESSION_SECRET")
 # Initialize the translation model
 translation_model = None
 
-# Available target languages
+# Available target languages (all 13 languages from ALT dataset)
 SUPPORTED_LANGUAGES = {
+    "bn": "Bengali",
+    "en": "English",
+    "fil": "Filipino",
+    "hi": "Hindi",
+    "id": "Bahasa Indonesia",
     "ja": "Japanese",
-    "ko": "Korean",
-    "zh": "Chinese",
+    "km": "Khmer",
+    "lo": "Lao",
+    "ms": "Malay",
+    "my": "Myanmar (Burmese)",
     "th": "Thai",
     "vi": "Vietnamese",
-    "my": "Burmese",
-    "id": "Indonesian"
+    "zh": "Chinese (Simplified)"
 }
 
 @app.route('/')

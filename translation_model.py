@@ -9,8 +9,58 @@ class TranslationModel:
         """Initialize the demo translation model"""
         logger.info("Initializing demo translation model...")
         
-        # Some example translations for demonstration (English to various languages)
+        # Sample translations for all 13 languages in the ALT dataset
         self.demo_translations = {
+            "bn": {  # Bengali
+                "Hello": "হ্যালো",
+                "Thank you": "ধন্যবাদ",
+                "How are you?": "আপনি কেমন আছেন?",
+                "Welcome": "স্বাগতম",
+                "Good morning": "সুপ্রভাত",
+                "My name is": "আমার নাম",
+                "I love languages": "আমি ভাষা ভালবাসি",
+                "This is a demonstration": "এটি একটি প্রদর্শন"
+            },
+            "en": {  # English (for reference)
+                "Hello": "Hello",
+                "Thank you": "Thank you",
+                "How are you?": "How are you?",
+                "Welcome": "Welcome",
+                "Good morning": "Good morning",
+                "My name is": "My name is",
+                "I love languages": "I love languages",
+                "This is a demonstration": "This is a demonstration"
+            },
+            "fil": {  # Filipino
+                "Hello": "Kamusta",
+                "Thank you": "Salamat",
+                "How are you?": "Kumusta ka?",
+                "Welcome": "Maligayang pagdating",
+                "Good morning": "Magandang umaga",
+                "My name is": "Ang pangalan ko ay",
+                "I love languages": "Mahilig ako sa mga wika",
+                "This is a demonstration": "Ito ay isang pagpapakita"
+            },
+            "hi": {  # Hindi
+                "Hello": "नमस्ते",
+                "Thank you": "धन्यवाद",
+                "How are you?": "आप कैसे हैं?",
+                "Welcome": "स्वागत है",
+                "Good morning": "सुप्रभात",
+                "My name is": "मेरा नाम है",
+                "I love languages": "मुझे भाषाएँ पसंद हैं",
+                "This is a demonstration": "यह एक प्रदर्शन है"
+            },
+            "id": {  # Indonesian
+                "Hello": "Halo",
+                "Thank you": "Terima kasih",
+                "How are you?": "Apa kabar?",
+                "Welcome": "Selamat datang",
+                "Good morning": "Selamat pagi",
+                "My name is": "Nama saya adalah",
+                "I love languages": "Saya suka bahasa",
+                "This is a demonstration": "Ini adalah demonstrasi"
+            },
             "ja": {  # Japanese
                 "Hello": "こんにちは",
                 "Thank you": "ありがとう",
@@ -21,25 +71,45 @@ class TranslationModel:
                 "I love languages": "私は言語が大好きです",
                 "This is a demonstration": "これはデモンストレーションです"
             },
-            "ko": {  # Korean
-                "Hello": "안녕하세요",
-                "Thank you": "감사합니다",
-                "How are you?": "어떻게 지내세요?",
-                "Welcome": "환영합니다",
-                "Good morning": "좋은 아침이에요",
-                "My name is": "제 이름은",
-                "I love languages": "저는 언어를 사랑합니다",
-                "This is a demonstration": "이것은 데모입니다"
+            "km": {  # Khmer
+                "Hello": "សួស្តី",
+                "Thank you": "អរគុណ",
+                "How are you?": "តើអ្នកសុខសប្បាយទេ?",
+                "Welcome": "សូមស្វាគមន៍",
+                "Good morning": "អរុណសួស្តី",
+                "My name is": "ខ្ញុំឈ្មោះ",
+                "I love languages": "ខ្ញុំស្រលាញ់ភាសា",
+                "This is a demonstration": "នេះគឺជាការបង្ហាញ"
             },
-            "zh": {  # Chinese
-                "Hello": "你好",
-                "Thank you": "谢谢",
-                "How are you?": "你好吗？",
-                "Welcome": "欢迎",
-                "Good morning": "早上好",
-                "My name is": "我的名字是",
-                "I love languages": "我喜欢语言",
-                "This is a demonstration": "这是一个演示"
+            "lo": {  # Lao
+                "Hello": "ສະບາຍດີ",
+                "Thank you": "ຂອບໃຈ",
+                "How are you?": "ສະບາຍດີບໍ?",
+                "Welcome": "ຍິນດີຕ້ອນຮັບ",
+                "Good morning": "ອາລຸນສະຫວັດ",
+                "My name is": "ຂ້ອຍຊື່",
+                "I love languages": "ຂ້ອຍຮັກພາສາ",
+                "This is a demonstration": "ນີ້ແມ່ນການສາທິດ"
+            },
+            "ms": {  # Malay
+                "Hello": "Hello",
+                "Thank you": "Terima kasih",
+                "How are you?": "Apa khabar?",
+                "Welcome": "Selamat datang",
+                "Good morning": "Selamat pagi",
+                "My name is": "Nama saya ialah",
+                "I love languages": "Saya suka bahasa",
+                "This is a demonstration": "Ini adalah demonstrasi"
+            },
+            "my": {  # Myanmar (Burmese)
+                "Hello": "မင်္ဂလာပါ",
+                "Thank you": "ကျေးဇူးတင်ပါတယ်",
+                "How are you?": "နေကောင်းလား?",
+                "Welcome": "ကြိုဆိုပါတယ်",
+                "Good morning": "မင်္ဂလာနံနက်ခင်းပါ",
+                "My name is": "ကျွန်တော်နာမည်က",
+                "I love languages": "ကျွန်တော် ဘာသာစကားများကို နှစ်သက်သည်",
+                "This is a demonstration": "ဤသည်မှာ သရုပ်ပြမှုဖြစ်သည်"
             },
             "th": {  # Thai
                 "Hello": "สวัสดี",
@@ -61,29 +131,19 @@ class TranslationModel:
                 "I love languages": "Tôi yêu ngôn ngữ",
                 "This is a demonstration": "Đây là một bản demo"
             },
-            "my": {  # Burmese
-                "Hello": "မင်္ဂလာပါ",
-                "Thank you": "ကျေးဇူးတင်ပါတယ်",
-                "How are you?": "နေကောင်းလား?",
-                "Welcome": "ကြိုဆိုပါတယ်",
-                "Good morning": "မင်္ဂလာနံနက်ခင်းပါ",
-                "My name is": "ကျွန်တော်နာမည်က",
-                "I love languages": "ကျွန်တော် ဘာသာစကားများကို နှစ်သက်သည်",
-                "This is a demonstration": "ဤသည်မှာ သရုပ်ပြမှုဖြစ်သည်"
-            },
-            "id": {  # Indonesian
-                "Hello": "Halo",
-                "Thank you": "Terima kasih",
-                "How are you?": "Apa kabar?",
-                "Welcome": "Selamat datang",
-                "Good morning": "Selamat pagi",
-                "My name is": "Nama saya adalah",
-                "I love languages": "Saya suka bahasa",
-                "This is a demonstration": "Ini adalah demonstrasi"
+            "zh": {  # Chinese (Simplified)
+                "Hello": "你好",
+                "Thank you": "谢谢",
+                "How are you?": "你好吗？",
+                "Welcome": "欢迎",
+                "Good morning": "早上好",
+                "My name is": "我的名字是",
+                "I love languages": "我喜欢语言",
+                "This is a demonstration": "这是一个演示"
             }
         }
         
-        logger.info("Demo translation model initialized")
+        logger.info("Demo translation model initialized with all 13 ALT dataset languages")
     
     def translate(self, text, target_lang):
         """
