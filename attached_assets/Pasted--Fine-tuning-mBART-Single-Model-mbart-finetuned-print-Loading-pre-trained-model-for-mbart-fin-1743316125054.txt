@@ -1,0 +1,50 @@
+# Fine-tuning mBART - Single Model (mbart-finetuned)
+print("Loading pre-trained model for mbart-finetuned...")
+MODEL_CHECKPOINT = "facebook/mbart-large-50-many-to-many-mmt"
+tokenizer = MBart50TokenizerFast.from_pretrained(MODEL_CHECKPOINT)
+tokenizer.src_lang = lang_map['en']
+
+def process_single_example(example):
+    source = example['source']
+    target = example['target']
+    source_tokens = tokenizer(source, max_length=128, truncation=True, padding="max_length", return_tensors="pt")
+    target_tokens = tokenizer(target, max_length=128, truncation=True, padding="max_length", return_tensors="pt")
+    return {
+        "input_ids": source_tokens["input_ids"][0],
+        "attention_mask": source_tokens["attention_mask"][0],
+        "labels": target_tokens["input_ids"][0],
+    }
+
+print("Tokenizing dataset for mbart-finetuned...")
+tokenized_dataset = train_dataset.map(process_single_example, remove_columns=train_dataset.column_names)
+tokenized_datasets = tokenized_dataset.train_test_split(test_size=0.1)
+
+model = MBartForConditionalGeneration.from_pretrained(MODEL_CHECKPOINT)
+
+training_args = TrainingArguments(
+    output_dir="./mbart-finetuned",
+    evaluation_strategy="epoch",
+    learning_rate=2e-5,
+    per_device_train_batch_size=1,
+    per_device_eval_batch_size=1,
+    num_train_epochs=1,
+    weight_decay=0.01,
+    save_strategy="epoch",
+    push_to_hub=False,
+    logging_dir="./logs",
+    logging_steps=100,
+    fp16=True,
+    report_to=["none"],
+    run_name=None,
+)
+
+print("Initializing trainer for mbart-finetuned...")
+trainer = Trainer(model=model, args=training_args, train_dataset=tokenized_datasets["train"], eval_dataset=tokenized_datasets["test"])
+
+print("Starting training for mbart-finetuned...")
+trainer.train()
+
+print("Saving fine-tuned model mbart-finetuned...")
+model.save_pretrained("./mbart-finetuned")
+tokenizer.save_pretrained("./mbart-finetuned")
+print("✅ Fine-tuning for mbart-finetuned completed and model saved!")
