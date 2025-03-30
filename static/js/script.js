@@ -10,6 +10,7 @@ let sourceCharCount;
 let copySourceBtn;
 let copyTranslationBtn;
 let swapBtn;
+let useMbartSwitch;
 
 // Constants
 const MAX_CHARS = 5000;
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     copySourceBtn = document.getElementById('copy-source-btn');
     copyTranslationBtn = document.getElementById('copy-translation-btn');
     swapBtn = document.getElementById('swap-btn');
+    useMbartSwitch = document.getElementById('use-mbart');
     
     // Add event listeners
     translateBtn.addEventListener('click', translateText);
@@ -37,11 +39,22 @@ document.addEventListener('DOMContentLoaded', () => {
     copyTranslationBtn.addEventListener('click', () => copyText(translationResult.textContent));
     swapBtn.addEventListener('click', swapLanguages);
     
+    // Initialize tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    
     // Initialize the UI state
     updateUIState();
     
     // Auto-trigger translation when language changes
     targetLang.addEventListener('change', () => {
+        if (sourceText.value.trim()) {
+            translateText();
+        }
+    });
+    
+    // Auto-trigger translation when model option changes
+    useMbartSwitch.addEventListener('change', () => {
         if (sourceText.value.trim()) {
             translateText();
         }
@@ -82,6 +95,7 @@ async function translateText() {
         // Get the text and target language
         const text = sourceText.value.trim();
         const lang = targetLang.value;
+        const useMbart = useMbartSwitch ? useMbartSwitch.checked : false;
         
         // Validate input
         if (!text) {
@@ -101,7 +115,8 @@ async function translateText() {
             },
             body: JSON.stringify({
                 text: text,
-                target_lang: lang
+                target_lang: lang,
+                use_mbart: useMbart
             })
         });
         
@@ -120,11 +135,44 @@ async function translateText() {
         // Display the translation result
         displayTranslation(data.translation);
         
+        // Show model info
+        if (data.model === 'mbart') {
+            showModelInfo('Using mBART neural model', 'var(--bs-info)');
+        } else {
+            showModelInfo('Using legacy translation model', 'var(--bs-secondary)');
+        }
+        
     } catch (error) {
         showLoading(false);
         showError('An error occurred. Please try again later.');
         console.error('Translation error:', error);
     }
+}
+
+// Function to show which model was used
+function showModelInfo(message, color) {
+    const modelInfo = document.createElement('div');
+    modelInfo.className = 'model-info';
+    modelInfo.textContent = message;
+    modelInfo.style.fontSize = '0.8rem';
+    modelInfo.style.color = color;
+    modelInfo.style.textAlign = 'right';
+    modelInfo.style.marginTop = '5px';
+    modelInfo.style.fontStyle = 'italic';
+    
+    // Replace any existing model info
+    const existingInfo = document.querySelector('.model-info');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+    
+    // Append after translation result
+    translationResult.parentNode.appendChild(modelInfo);
+    
+    // Fade out after 5 seconds
+    setTimeout(() => {
+        modelInfo.style.opacity = '0.5';
+    }, 5000);
 }
 
 // Function to display the translation result
@@ -147,6 +195,13 @@ function clearText() {
     hideError();
     sourceCharCount.textContent = `0/${MAX_CHARS}`;
     sourceCharCount.style.color = '#888';
+    
+    // Clear model info if present
+    const modelInfo = document.querySelector('.model-info');
+    if (modelInfo) {
+        modelInfo.remove();
+    }
+    
     updateUIState();
 }
 
