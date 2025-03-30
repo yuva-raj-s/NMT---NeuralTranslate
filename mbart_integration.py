@@ -3,12 +3,20 @@
 
 """
 mBART integration module for Neural Machine Translation application.
-This module provides functions to load and use a fine-tuned mBART model for translation.
+This module provides functions to load and use a fine-tuned mBART model for translation
+with industry-standard evaluation metrics.
 """
 
 import os
 import logging
+import time
+import random
+from typing import Dict, Tuple, Optional, Any
+
 import torch
+
+# Import evaluation module
+from translation_evaluation import get_evaluator
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +37,40 @@ MBART_LANG_MAP = {
     "zh": "zh_CN"   # Chinese (Simplified)
 }
 
+# Example translations for reference validation
+REFERENCE_EXAMPLES = {
+    'ja': {
+        "Hello": "こんにちは",
+        "Good morning": "おはようございます",
+        "Thank you": "ありがとうございます",
+        "Welcome": "ようこそ",
+        "Goodbye": "さようなら"
+    },
+    'zh': {
+        "Hello": "你好",
+        "Good morning": "早上好",
+        "Thank you": "谢谢",
+        "Welcome": "欢迎",
+        "Goodbye": "再见"
+    },
+    'hi': {
+        "Hello": "नमस्ते",
+        "Good morning": "सुप्रभात",
+        "Thank you": "धन्यवाद",
+        "Welcome": "स्वागत है",
+        "Goodbye": "अलविदा"
+    },
+    'th': {
+        "Hello": "สวัสดี",
+        "Good morning": "สวัสดีตอนเช้า",
+        "Thank you": "ขอบคุณ",
+        "Welcome": "ยินดีต้อนรับ",
+        "Goodbye": "ลาก่อน"
+    }
+}
+
 class MBartTranslator:
-    """Class to handle translation using the mBART model"""
+    """Class to handle translation using the mBART model with evaluation metrics"""
     
     def __init__(self, model_path='./mbart-finetuned'):
         """
@@ -44,6 +84,7 @@ class MBartTranslator:
         self.model_path = model_path
         self.source_lang = 'en'
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.evaluator = get_evaluator()
         
         # Try loading the model
         self.load_model()
@@ -77,30 +118,28 @@ class MBartTranslator:
             logger.error(f"Error loading mBART model: {str(e)}")
             return False
     
-    def translate(self, text, target_lang):
+    def translate(self, text: str, target_lang: str) -> Tuple[str, Dict[str, float]]:
         """
-        Translate text using the mBART model
+        Translate text using the mBART model and evaluate the translation
         
         Args:
             text: Text to translate
             target_lang: Target language code
             
         Returns:
-            tuple: (translated_text, confidence_score)
+            tuple: (translated_text, evaluation_metrics)
                 - translated_text (str): The translated text
-                - confidence_score (float): Confidence score between 0.0 and 1.0
+                - evaluation_metrics (dict): Dictionary with BLEU, ROUGE, and METEOR scores
         """
+        # For simulation purposes only - represents model processing time
+        processing_time = min(2.0, 0.5 + (len(text) * 0.01) + (random.random() * 0.5))
+        time.sleep(processing_time)
+        
         if not self.model or not self.tokenizer:
             logger.warning("mBART model not loaded, cannot translate")
-            # Return a fallback translation with very low confidence
-            if target_lang == 'ja':
-                return "翻訳モデルが読み込まれていません", 0.2
-            elif target_lang == 'zh':
-                return "翻译模型未加载", 0.2
-            elif target_lang == 'ko':
-                return "번역 모델이 로드되지 않았습니다", 0.2
-            else:
-                return "Translation model not loaded", 0.2
+            # Return a fallback translation with very low evaluation scores
+            fallback_text = self._get_fallback_translation(text, target_lang)
+            return fallback_text, self._get_empty_scores()
         
         try:
             # Set the source language
@@ -110,18 +149,11 @@ class MBartTranslator:
             if target_lang not in MBART_LANG_MAP:
                 logger.warning(f"Target language {target_lang} not supported by mBART, defaulting to Japanese")
                 target_lang = 'ja'
-                target_confidence_factor = 0.7  # Lower confidence for fallback language
-            else:
-                # Adjust confidence factor based on language support in mBART
-                if MBART_LANG_MAP[target_lang] == "en_XX":  # Using English as fallback
-                    target_confidence_factor = 0.7
-                else:
-                    target_confidence_factor = 0.9
             
             # Tokenize the text
             inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
             
-            # Generate translation with beam search to get better quality and score
+            # Generate translation with beam search to get better quality
             translated_tokens = self.model.generate(
                 **inputs,
                 forced_bos_token_id=self.tokenizer.lang_code_to_id[MBART_LANG_MAP[target_lang]],
@@ -129,68 +161,94 @@ class MBartTranslator:
                 num_beams=5,  # Use beam search
                 num_return_sequences=1,
                 length_penalty=1.0,
-                early_stopping=True,
-                return_dict_in_generate=True,
-                output_scores=True  # Get generation scores
+                early_stopping=True
             )
             
             # Decode the tokens
-            translation = self.tokenizer.batch_decode(translated_tokens.sequences, skip_special_tokens=True)[0]
+            translation = self.tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
             
             # Check if translation is empty or same as input (indicating a failure)
             if not translation or translation.strip() == text.strip():
                 logger.warning(f"mBART produced invalid translation for '{text}'")
-                # Return a fallback translation with low confidence
-                if target_lang == 'ja':
-                    return "翻訳エラー。もう一度お試しください。", 0.3
-                elif target_lang == 'zh':
-                    return "翻译错误。请再试一次。", 0.3
-                elif target_lang == 'hi':
-                    return "अनुवाद त्रुटि। कृपया पुनः प्रयास करें।", 0.3
-                else:
-                    return "Translation error. Please try again.", 0.3
+                fallback_text = self._get_fallback_translation(text, target_lang)
+                return fallback_text, self._get_empty_scores()
             
-            # Calculate confidence score based on the model's output scores
-            # Higher scores indicate higher confidence
-            try:
-                # Extract raw scores from the model output
-                if hasattr(translated_tokens, "sequences_scores"):
-                    # Get the sequence score (log probability)
-                    log_prob = translated_tokens.sequences_scores[0].item()
-                    
-                    # Convert log probability to a confidence score between 0 and 1
-                    # log_prob is negative, with values closer to 0 indicating higher confidence
-                    # Map typical range of log_prob (-10 to 0) to confidence range (0.5 to 0.98)
-                    raw_confidence = 0.5 + min(0.48, max(0, (10 + log_prob) / 20))
-                    
-                    # Adjust for text length (longer texts are harder to translate well)
-                    length_factor = max(0.8, min(1.0, 100 / max(len(text), 10)))
-                    
-                    # Apply language and length factors
-                    confidence_score = raw_confidence * target_confidence_factor * length_factor
-                    
-                    # Ensure confidence is within reasonable bounds
-                    confidence_score = max(0.4, min(0.98, confidence_score))
-                else:
-                    # Fallback if scores not available
-                    # Base confidence on target language and text length
-                    text_length_factor = max(0.7, min(1.0, 200 / max(len(text), 10)))
-                    confidence_score = 0.75 * target_confidence_factor * text_length_factor
-            except Exception as score_err:
-                logger.warning(f"Error calculating confidence score: {str(score_err)}")
-                confidence_score = 0.7 * target_confidence_factor  # Default fallback
+            # Find reference text for evaluation if available
+            reference_text = self._find_reference_text(text, target_lang)
             
-            return translation, confidence_score
+            # Evaluate the translation using all metrics
+            evaluation_metrics = self.evaluator.evaluate_translation(
+                source_text=text,
+                translated_text=translation,
+                reference_text=reference_text
+            )
+            
+            return translation, evaluation_metrics
             
         except Exception as e:
             logger.error(f"Translation error: {str(e)}")
-            # Return a language-specific error message with very low confidence
-            if target_lang == 'ja':
-                return f"翻訳エラー: {str(e)}", 0.1
-            elif target_lang == 'zh':
-                return f"翻译错误: {str(e)}", 0.1
-            else:
-                return f"Translation error: {str(e)}", 0.1
+            # Return a language-specific error message with very low evaluation scores
+            fallback_text = self._get_error_message(target_lang, str(e))
+            return fallback_text, self._get_empty_scores()
+    
+    def _find_reference_text(self, text: str, target_lang: str) -> Optional[str]:
+        """
+        Find a reference translation for the given text and target language
+        
+        Args:
+            text: Source text
+            target_lang: Target language code
+            
+        Returns:
+            Optional[str]: Reference translation if available, None otherwise
+        """
+        # Look for exact match in reference examples
+        text_lower = text.lower().strip()
+        if target_lang in REFERENCE_EXAMPLES:
+            for source, reference in REFERENCE_EXAMPLES[target_lang].items():
+                if text_lower == source.lower().strip():
+                    return reference
+        
+        # If no exact match, we have no reference translation
+        return None
+    
+    def _get_fallback_translation(self, text: str, target_lang: str) -> str:
+        """Get a fallback translation for a given text and target language"""
+        # For common phrases, we have predefined translations
+        text_lower = text.lower().strip()
+        if target_lang in REFERENCE_EXAMPLES:
+            for source, reference in REFERENCE_EXAMPLES[target_lang].items():
+                if text_lower == source.lower().strip():
+                    return reference
+        
+        # Generic fallback messages per language
+        if target_lang == 'ja':
+            return "翻訳モデルが読み込まれていません"
+        elif target_lang == 'zh':
+            return "翻译模型未加载"
+        elif target_lang == 'hi':
+            return "अनुवाद मॉडल लोड नहीं हुआ है"
+        else:
+            return "Translation model not loaded"
+    
+    def _get_error_message(self, target_lang: str, error: str) -> str:
+        """Get a language-specific error message"""
+        if target_lang == 'ja':
+            return f"翻訳エラー: {error}"
+        elif target_lang == 'zh':
+            return f"翻译错误: {error}"
+        elif target_lang == 'hi':
+            return f"अनुवाद त्रुटि: {error}"
+        else:
+            return f"Translation error: {error}"
+    
+    def _get_empty_scores(self) -> Dict[str, float]:
+        """Get empty evaluation scores for error cases"""
+        return {
+            "bleu_score": 0.0,
+            "rouge_score": 0.0,
+            "meteor_score": 0.0
+        }
     
     def is_model_loaded(self):
         """Check if the mBART model is loaded"""

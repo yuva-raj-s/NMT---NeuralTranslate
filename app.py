@@ -1,23 +1,17 @@
 import os
 import logging
 from flask import Flask, render_template, request, jsonify
-from translation_model import TranslationModel
-try:
-    from mbart_integration import get_translator
-    HAS_MBART = True
-except ImportError:
-    HAS_MBART = False
+from mbart_integration import get_translator
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET")
 
-# Initialize the translation models
-translation_model = None
+# Initialize the translation model
 mbart_translator = None
 
 # Available target languages (all 13 languages from ALT dataset)
@@ -52,7 +46,6 @@ def translate():
         data = request.json
         text = data.get('text', '')
         target_lang = data.get('target_lang', 'ja')
-        use_mbart = data.get('use_mbart', False)  # Default to legacy model if not specified
         
         # Check if input is valid
         if not text:
@@ -61,50 +54,42 @@ def translate():
         if target_lang not in SUPPORTED_LANGUAGES:
             return jsonify({'error': f'Language {target_lang} is not supported'}), 400
         
-        # Try using mBART model first if requested and available
-        if use_mbart and HAS_MBART:
-            try:
-                global mbart_translator
-                if mbart_translator is None:
-                    logger.debug("Initializing mBART translator...")
-                    mbart_translator = get_translator()
-                
-                if mbart_translator.is_model_loaded():
-                    logger.debug(f"Using mBART model for translation to {target_lang}")
-                    translated_text, confidence_score = mbart_translator.translate(text, target_lang)
-                    
-                    # Format confidence score as percentage with 1 decimal place
-                    confidence_percentage = round(confidence_score * 100, 1)
-                    
-                    return jsonify({
-                        'translation': translated_text, 
-                        'model': 'mbart',
-                        'confidence': confidence_score,
-                        'confidence_percentage': confidence_percentage
-                    })
-                else:
-                    logger.warning("mBART model failed to load, falling back to legacy model")
-            except Exception as e:
-                logger.error(f"mBART translation error: {str(e)}")
-                logger.warning("Falling back to legacy translation model")
+        # Initialize mBART translator if not already initialized
+        global mbart_translator
+        if mbart_translator is None:
+            logger.info("Initializing mBART translator...")
+            mbart_translator = get_translator()
         
-        # Fall back to legacy model if mBART is not available or fails
-        global translation_model
-        if translation_model is None:
-            logger.debug("Initializing legacy translation model...")
-            translation_model = TranslationModel()
+        # Translate using mBART and get evaluation metrics
+        logger.debug(f"Translating text to {target_lang} using mBART model")
+        translated_text, evaluation_metrics = mbart_translator.translate(text, target_lang)
         
-        # Translate the text using legacy model
-        translated_text, confidence_score = translation_model.translate(text, target_lang)
+        # Format evaluation metrics as percentages with 1 decimal place
+        bleu_percentage = round(evaluation_metrics["bleu_score"] * 100, 1)
+        rouge_percentage = round(evaluation_metrics["rouge_score"] * 100, 1)
+        meteor_percentage = round(evaluation_metrics["meteor_score"] * 100, 1)
         
-        # Format confidence score as percentage with 1 decimal place
-        confidence_percentage = round(confidence_score * 100, 1)
+        # Calculate average score for overall quality indicator
+        average_score = (evaluation_metrics["bleu_score"] + 
+                         evaluation_metrics["rouge_score"] + 
+                         evaluation_metrics["meteor_score"]) / 3
+        quality_percentage = round(average_score * 100, 1)
         
         return jsonify({
-            'translation': translated_text, 
-            'model': 'legacy',
-            'confidence': confidence_score,
-            'confidence_percentage': confidence_percentage
+            'translation': translated_text,
+            'model': 'mbart',
+            'metrics': {
+                'bleu': evaluation_metrics["bleu_score"],
+                'rouge': evaluation_metrics["rouge_score"],
+                'meteor': evaluation_metrics["meteor_score"],
+                'quality': average_score
+            },
+            'percentages': {
+                'bleu': bleu_percentage,
+                'rouge': rouge_percentage,
+                'meteor': meteor_percentage,
+                'quality': quality_percentage
+            }
         })
     
     except Exception as e:

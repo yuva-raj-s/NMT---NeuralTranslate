@@ -10,7 +10,6 @@ let sourceCharCount;
 let copySourceBtn;
 let copyTranslationBtn;
 let swapBtn;
-let useMbartSwitch;
 
 // Constants
 const MAX_CHARS = 5000;
@@ -29,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     copySourceBtn = document.getElementById('copy-source-btn');
     copyTranslationBtn = document.getElementById('copy-translation-btn');
     swapBtn = document.getElementById('swap-btn');
-    useMbartSwitch = document.getElementById('use-mbart');
     
     // Add event listeners
     translateBtn.addEventListener('click', translateText);
@@ -48,13 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Auto-trigger translation when language changes
     targetLang.addEventListener('change', () => {
-        if (sourceText.value.trim()) {
-            translateText();
-        }
-    });
-    
-    // Auto-trigger translation when model option changes
-    useMbartSwitch.addEventListener('change', () => {
         if (sourceText.value.trim()) {
             translateText();
         }
@@ -95,7 +86,6 @@ async function translateText() {
         // Get the text and target language
         const text = sourceText.value.trim();
         const lang = targetLang.value;
-        const useMbart = useMbartSwitch ? useMbartSwitch.checked : false;
         
         // Validate input
         if (!text) {
@@ -115,8 +105,7 @@ async function translateText() {
             },
             body: JSON.stringify({
                 text: text,
-                target_lang: lang,
-                use_mbart: useMbart
+                target_lang: lang
             })
         });
         
@@ -132,15 +121,11 @@ async function translateText() {
             return;
         }
         
-        // Display the translation result with confidence score
-        displayTranslation(data.translation, data.confidence);
+        // Display the translation result with evaluation metrics
+        displayTranslation(data.translation, data.metrics, data.percentages);
         
         // Show model info
-        if (data.model === 'mbart') {
-            showModelInfo('Using mBART neural model', 'var(--bs-info)');
-        } else {
-            showModelInfo('Using legacy translation model', 'var(--bs-secondary)');
-        }
+        showModelInfo('Using mBART neural model with industry-standard metrics', 'var(--bs-info)');
         
     } catch (error) {
         showLoading(false);
@@ -175,8 +160,8 @@ function showModelInfo(message, color) {
     }, 5000);
 }
 
-// Function to display the translation result
-function displayTranslation(translation, confidence) {
+// Function to display the translation result with evaluation metrics
+function displayTranslation(translation, metrics, percentages) {
     translationResult.textContent = translation;
     translationResult.classList.add('show');
     
@@ -186,48 +171,123 @@ function displayTranslation(translation, confidence) {
         translationResult.style.backgroundColor = '';
     }, 300);
     
-    // Display confidence indicator if provided
-    if (confidence !== undefined) {
-        const confidenceElement = document.createElement('div');
-        confidenceElement.className = 'confidence-indicator';
+    // Display evaluation metrics if provided
+    if (metrics && percentages) {
+        const metricsElement = document.createElement('div');
+        metricsElement.className = 'metrics-container';
+        metricsElement.style.marginTop = '15px';
         
-        // Determine confidence color and label
-        let confidenceColor, confidenceLabel;
-        if (confidence >= 0.85) {
-            confidenceColor = 'var(--bs-success)';
-            confidenceLabel = 'High';
-        } else if (confidence >= 0.65) {
-            confidenceColor = 'var(--bs-info)';
-            confidenceLabel = 'Medium';
-        } else {
-            confidenceColor = 'var(--bs-warning)';
-            confidenceLabel = 'Low';
-        }
+        // Create evaluation metrics visualization
+        const getMetricColor = (value) => {
+            if (value >= 0.7) return 'var(--bs-success)';
+            if (value >= 0.4) return 'var(--bs-info)';
+            if (value >= 0.2) return 'var(--bs-warning)';
+            return 'var(--bs-danger)';
+        };
         
-        // Create a progress bar for the confidence score
-        const confidenceValue = Math.round(confidence * 100);
-        confidenceElement.innerHTML = `
-            <div class="confidence-text" style="margin-top: 15px; font-size: 0.85rem;">
-                <span style="color: ${confidenceColor}; font-weight: 500;">
-                    ${confidenceLabel} confidence (${confidenceValue}%)
-                </span>
-            </div>
-            <div class="progress mt-1" style="height: 4px; width: 100%;">
-                <div class="progress-bar" role="progressbar" 
-                    style="width: ${confidenceValue}%; background-color: ${confidenceColor};" 
-                    aria-valuenow="${confidenceValue}" aria-valuemin="0" aria-valuemax="100">
+        const getMetricLabel = (value) => {
+            if (value >= 0.7) return 'Excellent';
+            if (value >= 0.4) return 'Good';
+            if (value >= 0.2) return 'Fair';
+            return 'Poor';
+        };
+        
+        // Create metrics visualization
+        metricsElement.innerHTML = `
+            <h6 class="metrics-title mb-2" style="font-size: 0.9rem; font-weight: 600; color: var(--bs-secondary);">
+                Translation Quality Metrics
+            </h6>
+            
+            <div class="row g-2">
+                <div class="col-4">
+                    <div class="metric-card p-2 text-center" style="border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);">
+                        <div class="metric-name" style="font-size: 0.75rem; color: var(--bs-secondary);">BLEU</div>
+                        <div class="metric-value" style="font-size: 1.1rem; font-weight: 600; color: ${getMetricColor(metrics.bleu)};">
+                            ${percentages.bleu}%
+                        </div>
+                        <div class="metric-label" style="font-size: 0.7rem; color: ${getMetricColor(metrics.bleu)};">
+                            ${getMetricLabel(metrics.bleu)}
+                        </div>
+                        <div class="progress mt-1" style="height: 3px;">
+                            <div class="progress-bar" role="progressbar" 
+                                style="width: ${percentages.bleu}%; background-color: ${getMetricColor(metrics.bleu)};" 
+                                aria-valuenow="${percentages.bleu}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
+                <div class="col-4">
+                    <div class="metric-card p-2 text-center" style="border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);">
+                        <div class="metric-name" style="font-size: 0.75rem; color: var(--bs-secondary);">ROUGE</div>
+                        <div class="metric-value" style="font-size: 1.1rem; font-weight: 600; color: ${getMetricColor(metrics.rouge)};">
+                            ${percentages.rouge}%
+                        </div>
+                        <div class="metric-label" style="font-size: 0.7rem; color: ${getMetricColor(metrics.rouge)};">
+                            ${getMetricLabel(metrics.rouge)}
+                        </div>
+                        <div class="progress mt-1" style="height: 3px;">
+                            <div class="progress-bar" role="progressbar" 
+                                style="width: ${percentages.rouge}%; background-color: ${getMetricColor(metrics.rouge)};" 
+                                aria-valuenow="${percentages.rouge}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-4">
+                    <div class="metric-card p-2 text-center" style="border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);">
+                        <div class="metric-name" style="font-size: 0.75rem; color: var(--bs-secondary);">METEOR</div>
+                        <div class="metric-value" style="font-size: 1.1rem; font-weight: 600; color: ${getMetricColor(metrics.meteor)};">
+                            ${percentages.meteor}%
+                        </div>
+                        <div class="metric-label" style="font-size: 0.7rem; color: ${getMetricColor(metrics.meteor)};">
+                            ${getMetricLabel(metrics.meteor)}
+                        </div>
+                        <div class="progress mt-1" style="height: 3px;">
+                            <div class="progress-bar" role="progressbar" 
+                                style="width: ${percentages.meteor}%; background-color: ${getMetricColor(metrics.meteor)};" 
+                                aria-valuenow="${percentages.meteor}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="overall-quality mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size: 0.8rem; color: var(--bs-secondary);">Overall Quality</span>
+                    <span style="font-size: 0.8rem; font-weight: 500; color: ${getMetricColor(metrics.quality)};">
+                        ${getMetricLabel(metrics.quality)} (${percentages.quality}%)
+                    </span>
+                </div>
+                <div class="progress mt-1" style="height: 6px;">
+                    <div class="progress-bar" role="progressbar" 
+                        style="width: ${percentages.quality}%; background-color: ${getMetricColor(metrics.quality)};" 
+                        aria-valuenow="${percentages.quality}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metrics-info mt-2" style="font-size: 0.7rem; color: var(--bs-secondary); font-style: italic;">
+                BLEU, ROUGE, and METEOR are industry-standard metrics for evaluating translation quality
             </div>
         `;
         
-        // Replace any existing confidence indicator
+        // Replace any existing metrics container
+        const existingMetrics = document.querySelector('.metrics-container');
+        if (existingMetrics) {
+            existingMetrics.remove();
+        }
+        
+        // Replace any existing confidence indicator (from previous version)
         const existingConfidence = document.querySelector('.confidence-indicator');
         if (existingConfidence) {
             existingConfidence.remove();
         }
         
         // Add after translation result
-        translationResult.parentNode.appendChild(confidenceElement);
+        translationResult.parentNode.appendChild(metricsElement);
     }
 }
 
@@ -246,10 +306,16 @@ function clearText() {
         modelInfo.remove();
     }
     
-    // Clear confidence indicator if present
+    // Clear confidence indicator if present (legacy)
     const confidenceIndicator = document.querySelector('.confidence-indicator');
     if (confidenceIndicator) {
         confidenceIndicator.remove();
+    }
+    
+    // Clear metrics container if present
+    const metricsContainer = document.querySelector('.metrics-container');
+    if (metricsContainer) {
+        metricsContainer.remove();
     }
     
     updateUIState();
