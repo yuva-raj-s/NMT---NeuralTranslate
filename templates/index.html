@@ -14,6 +14,8 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mascots.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heatmap.css') }}">
     
     <style>
         /* Additional styles for language and metrics sections */
@@ -180,8 +182,27 @@
                     <button class="copy-btn" id="copy-translation-btn" title="Copy translation">
                         <i class="far fa-copy"></i>
                     </button>
-                    <div id="translation-result" class="form-control" style="min-height: 150px; overflow-y: auto;"></div>
+                    <div id="translation-result" class="form-control heatmap-container" style="min-height: 150px; overflow-y: auto;"></div>
                     <div id="loading-spinner" class="spinner-border text-light position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                    
+                    <!-- Mascot Container for Animation -->
+                    <div class="mascot-container" id="mascot-container">
+                        <!-- Language-specific mascots -->
+                        <div class="mascot mascot-ja" data-lang="ja"></div>
+                        <div class="mascot mascot-zh" data-lang="zh"></div>
+                        <div class="mascot mascot-hi" data-lang="hi"></div>
+                        <div class="mascot mascot-th" data-lang="th"></div>
+                        <div class="mascot mascot-vi" data-lang="vi"></div>
+                        <div class="mascot mascot-bn" data-lang="bn"></div>
+                        <div class="mascot mascot-id" data-lang="id"></div>
+                        <div class="mascot mascot-default" data-lang="default"></div>
+                        
+                        <!-- Mascot speech bubble -->
+                        <div class="mascot-speech" id="mascot-speech"></div>
+                    </div>
+                    
+                    <!-- Heatmap tooltip -->
+                    <div class="heatmap-tooltip" id="heatmap-tooltip"></div>
                 </div>
             </div>
             

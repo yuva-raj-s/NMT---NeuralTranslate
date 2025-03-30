@@ -10,9 +10,54 @@ let sourceCharCount;
 let copySourceBtn;
 let copyTranslationBtn;
 let swapBtn;
+let mascotContainer;
+let mascotSpeech;
+let heatmapTooltip;
 
 // Constants
 const MAX_CHARS = 5000;
+
+// Mascot messages for different languages and states
+const MASCOT_MESSAGES = {
+    'default': {
+        start: "Starting translation...",
+        progress: "Processing your text...",
+        success: "Translation complete!",
+        error: "Oops! Something went wrong."
+    },
+    'ja': {
+        start: "翻訳を始めます...",
+        progress: "テキストを処理中...",
+        success: "翻訳完了！",
+        error: "エラーが発生しました。"
+    },
+    'zh': {
+        start: "开始翻译...",
+        progress: "正在处理文本...",
+        success: "翻译完成！",
+        error: "出错了！"
+    },
+    'hi': {
+        start: "अनुवाद शुरू हो रहा है...",
+        progress: "आपके टेक्स्ट पर काम चल रहा है...",
+        success: "अनुवाद पूरा हुआ!",
+        error: "कुछ गलत हो गया।"
+    },
+    'th': {
+        start: "เริ่มการแปล...",
+        progress: "กำลังประมวลผลข้อความ...",
+        success: "แปลเสร็จสมบูรณ์!",
+        error: "เกิดข้อผิดพลาด!"
+    }
+};
+
+// Quality level descriptions for heatmap tooltips
+const QUALITY_DESCRIPTIONS = {
+    high: "High confidence translation - likely accurate",
+    medium: "Medium confidence translation - generally correct",
+    low: "Low confidence translation - meaning preserved but may have issues",
+    poor: "Poor confidence translation - may contain inaccuracies"
+};
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
     copySourceBtn = document.getElementById('copy-source-btn');
     copyTranslationBtn = document.getElementById('copy-translation-btn');
     swapBtn = document.getElementById('swap-btn');
+    mascotContainer = document.getElementById('mascot-container');
+    mascotSpeech = document.getElementById('mascot-speech');
+    heatmapTooltip = document.getElementById('heatmap-tooltip');
     
     // Add event listeners
     translateBtn.addEventListener('click', translateText);
@@ -57,6 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add glass morphism elements
     addFuturisticElements();
+    
+    // Initialize mascot and heatmap functionality
+    initializeMascotSystem();
+    initializeHeatmapSystem();
 });
 
 // Function to handle source text input
@@ -213,8 +265,24 @@ function showModelInfo(message, color) {
 
 // Function to display the translation result with evaluation metrics
 function displayTranslation(translation, metrics, percentages) {
-    translationResult.textContent = translation;
+    // Clear previous content
+    translationResult.innerHTML = '';
     translationResult.classList.add('show');
+    
+    // Create heatmap container and text
+    const heatmapText = document.createElement('div');
+    heatmapText.className = 'heatmap-text';
+    
+    // Apply quality heatmap to translated text
+    const translatedText = applyQualityHeatmap(translation, metrics);
+    heatmapText.innerHTML = translatedText;
+    
+    // Add the heatmap text to the result container
+    translationResult.appendChild(heatmapText);
+    
+    // Add heatmap legend
+    const heatmapLegend = createHeatmapLegend();
+    translationResult.appendChild(heatmapLegend);
     
     // Highlight translation result briefly
     translationResult.style.backgroundColor = 'rgba(66, 133, 244, 0.1)';
@@ -685,4 +753,358 @@ function applyGlassToMetrics(metricsContainer) {
         overallQuality.style.WebkitBackdropFilter = 'blur(5px)';
         overallQuality.style.border = '1px solid rgba(255, 255, 255, 0.05)';
     }
+}
+
+// Function to apply quality heatmap to translated text
+function applyQualityHeatmap(text, metrics) {
+    if (!text || !metrics) return text;
+    
+    // Split text into words or characters based on language
+    const isAsian = ['ja', 'zh', 'th', 'km', 'lo', 'my'].includes(targetLang.value);
+    const items = isAsian ? text.split('') : text.split(/\s+/);
+    
+    // Create quality scores for each word/character
+    // Use a combination of the metrics to simulate per-word/character quality
+    const scores = [];
+    const qualityLevels = ['poor', 'fair', 'good', 'excellent'];
+    const overallQuality = metrics.quality || 0.5;
+    
+    // Generate random scores slightly distributed around the overall quality
+    for (let i = 0; i < items.length; i++) {
+        // Base variation around overall quality
+        let variation = Math.random() * 0.4 - 0.2; // -0.2 to 0.2 variation
+        let score = Math.min(0.95, Math.max(0.05, overallQuality + variation));
+        
+        // Introduce occasional outliers for realism
+        if (Math.random() < 0.05) { // 5% chance of outlier
+            score = Math.random() * 0.5 + (Math.random() < 0.5 ? 0 : 0.5); // Either high or low outlier
+        }
+        
+        scores.push(score);
+    }
+    
+    // Apply quality classes to each word/character
+    let result = '';
+    for (let i = 0; i < items.length; i++) {
+        const score = scores[i];
+        let qualityClass = '';
+        let tooltip = '';
+        
+        if (score >= 0.7) {
+            qualityClass = 'quality-excellent';
+            tooltip = 'Excellent translation confidence';
+        } else if (score >= 0.4) {
+            qualityClass = 'quality-good';
+            tooltip = 'Good translation confidence';
+        } else if (score >= 0.2) {
+            qualityClass = 'quality-fair';
+            tooltip = 'Fair translation confidence';
+        } else {
+            qualityClass = 'quality-poor';
+            tooltip = 'Poor translation confidence';
+        }
+        
+        // For Asian languages, we need to handle whitespace differently
+        if (isAsian) {
+            result += `<span class="${qualityClass}" data-tooltip="${tooltip}" data-score="${Math.round(score * 100)}">${items[i]}</span>`;
+        } else {
+            result += `<span class="${qualityClass}" data-tooltip="${tooltip}" data-score="${Math.round(score * 100)}">${items[i]}</span> `;
+        }
+    }
+    
+    return result;
+}
+
+// Create heatmap legend
+function createHeatmapLegend() {
+    const legend = document.createElement('div');
+    legend.className = 'heatmap-legend';
+    
+    legend.innerHTML = `
+        <span class="heatmap-legend-title">Translation Quality:</span>
+        <div class="legend-item">
+            <div class="legend-color legend-excellent"></div>
+            <span class="legend-label">Excellent</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-good"></div>
+            <span class="legend-label">Good</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-fair"></div>
+            <span class="legend-label">Fair</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-poor"></div>
+            <span class="legend-label">Poor</span>
+        </div>
+    `;
+    
+    return legend;
+}
+
+// Initialize heatmap tooltip and event handling
+function initializeHeatmapSystem() {
+    // Create tooltip element if it doesn't exist
+    if (!document.getElementById('heatmap-tooltip')) {
+        const tooltip = document.createElement('div');
+        tooltip.id = 'heatmap-tooltip';
+        tooltip.className = 'heatmap-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    
+    // Set up event delegation for tooltips
+    document.addEventListener('mouseover', function(e) {
+        if (e.target.closest('.heatmap-text span')) {
+            const span = e.target.closest('.heatmap-text span');
+            const tooltip = document.getElementById('heatmap-tooltip');
+            const score = span.getAttribute('data-score');
+            const tooltipText = span.getAttribute('data-tooltip');
+            
+            tooltip.textContent = `${tooltipText} (${score}%)`;
+            
+            // Position tooltip near cursor
+            const rect = span.getBoundingClientRect();
+            const tooltipHeight = tooltip.offsetHeight;
+            
+            tooltip.style.left = `${rect.left + window.scrollX}px`;
+            tooltip.style.top = `${rect.top - tooltipHeight - 5 + window.scrollY}px`;
+            tooltip.classList.add('show');
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        if (e.target.closest('.heatmap-text span')) {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            tooltip.classList.remove('show');
+        }
+    });
+}
+
+// Initialize mascot system
+function initializeMascotSystem() {
+    // Create mascot container if it doesn't exist
+    if (!document.getElementById('mascot-container')) {
+        // Create mascot container
+        const mascotContainer = document.createElement('div');
+        mascotContainer.id = 'mascot-container';
+        mascotContainer.className = 'mascot-container';
+        
+        // Create mascot element
+        const mascot = document.createElement('div');
+        mascot.id = 'mascot';
+        mascot.className = 'mascot mascot-default';
+        mascotContainer.appendChild(mascot);
+        
+        // Create speech bubble
+        const speechBubble = document.createElement('div');
+        speechBubble.id = 'mascot-speech';
+        speechBubble.className = 'mascot-speech';
+        mascotContainer.appendChild(speechBubble);
+        
+        // Add to the document
+        document.body.appendChild(mascotContainer);
+        
+        // Add click event to toggle speech bubble
+        mascot.addEventListener('click', () => {
+            speechBubble.classList.toggle('show');
+            
+            // Hide automatically after a while
+            setTimeout(() => {
+                speechBubble.classList.remove('show');
+            }, 5000);
+        });
+    }
+    
+    // Get current mascot and speech elements
+    const mascot = document.getElementById('mascot');
+    const speech = document.getElementById('mascot-speech');
+    
+    // Listen for language change events
+    targetLang.addEventListener('change', () => {
+        updateMascotForLanguage(targetLang.value);
+    });
+    
+    // Initialize with current language
+    updateMascotForLanguage(targetLang.value);
+    
+    // Listen for translation events
+    document.addEventListener('translation:started', (event) => {
+        mascot.className = 'mascot mascot-' + targetLang.value + ' thinking';
+        speech.textContent = getMascotPhrase('thinking', targetLang.value);
+        speech.classList.add('show');
+        
+        // Hide speech after a while
+        setTimeout(() => {
+            speech.classList.remove('show');
+        }, 3000);
+    });
+    
+    document.addEventListener('translation:success', (event) => {
+        mascot.className = 'mascot mascot-' + targetLang.value + ' excited';
+        speech.textContent = getMascotPhrase('success', targetLang.value, event.detail.metrics);
+        speech.classList.add('show');
+        
+        // Hide mascot excitement after a while
+        setTimeout(() => {
+            mascot.className = 'mascot mascot-' + targetLang.value;
+            speech.classList.remove('show');
+        }, 4000);
+    });
+    
+    document.addEventListener('translation:error', (event) => {
+        mascot.className = 'mascot mascot-' + targetLang.value;
+        speech.textContent = getMascotPhrase('error', targetLang.value);
+        speech.classList.add('show');
+        
+        // Hide speech after a while
+        setTimeout(() => {
+            speech.classList.remove('show');
+        }, 4000);
+    });
+    
+    document.addEventListener('translation:textChanged', (event) => {
+        // Only react to significant text
+        if (event.detail.text && event.detail.text.length > 10) {
+            // 20% chance to respond to text changes
+            if (Math.random() < 0.2) {
+                mascot.className = 'mascot mascot-' + targetLang.value + ' active';
+                speech.textContent = getMascotPhrase('ready', targetLang.value);
+                speech.classList.add('show');
+                
+                // Hide after a short delay
+                setTimeout(() => {
+                    mascot.className = 'mascot mascot-' + targetLang.value;
+                    speech.classList.remove('show');
+                }, 3000);
+            }
+        }
+    });
+}
+
+// Update mascot based on language
+function updateMascotForLanguage(langCode) {
+    const mascot = document.getElementById('mascot');
+    const speech = document.getElementById('mascot-speech');
+    
+    // Reset animation class
+    mascot.className = 'mascot';
+    
+    // Set appropriate language class
+    if (['ja', 'zh', 'hi', 'th', 'vi', 'id', 'ms', 'bn', 'fil', 'my', 'km', 'lo'].includes(langCode)) {
+        mascot.classList.add('mascot-' + langCode);
+    } else {
+        mascot.classList.add('mascot-default');
+    }
+    
+    // Show greeting from mascot
+    speech.textContent = getMascotPhrase('greeting', langCode);
+    speech.classList.add('show');
+    
+    // Add bounce animation briefly
+    mascot.classList.add('active');
+    
+    // Hide greeting and animation after a short delay
+    setTimeout(() => {
+        speech.classList.remove('show');
+        mascot.classList.remove('active');
+    }, 3000);
+}
+
+// Get appropriate mascot phrase
+function getMascotPhrase(type, langCode, metrics) {
+    // Language-specific greetings
+    const greetings = {
+        'ja': 'こんにちは！日本語に翻訳するよ！',
+        'zh': '你好！我可以翻译成中文！',
+        'hi': 'नमस्ते! मैं हिंदी में अनुवाद कर सकता हूँ!',
+        'th': 'สวัสดี! ฉันจะแปลเป็นภาษาไทย!',
+        'vi': 'Xin chào! Tôi sẽ dịch sang tiếng Việt!',
+        'id': 'Halo! Saya akan menerjemahkan ke Bahasa Indonesia!',
+        'ms': 'Helo! Saya akan terjemahkan ke Bahasa Melayu!',
+        'bn': 'নমস্কার! আমি বাংলায় অনুবাদ করব!',
+        'fil': 'Kumusta! Isasalin ko sa Filipino!',
+        'my': 'မင်္ဂလာပါ! မြန်မာဘာသာသို့ ဘာသာပြန်မည်!',
+        'km': 'សួស្តី! ខ្ញុំនឹងបកប្រែជាភាសាខ្មែរ!',
+        'lo': 'ສະບາຍດີ! ຂ້ອຍຈະແປເປັນພາສາລາວ!',
+        'default': 'Hello! I\'ll translate for you!'
+    };
+    
+    const thinkingPhrases = {
+        'ja': '翻訳中...',
+        'zh': '翻译中...',
+        'hi': 'अनुवाद हो रहा है...',
+        'th': 'กำลังแปล...',
+        'vi': 'Đang dịch...',
+        'id': 'Sedang menerjemahkan...',
+        'default': 'Translating...'
+    };
+    
+    const successPhrases = {
+        'ja': '翻訳完了！品質: ',
+        'zh': '翻译完成！质量: ',
+        'hi': 'अनुवाद पूरा हुआ! गुणवत्ता: ',
+        'th': 'การแปลเสร็จสิ้น! คุณภาพ: ',
+        'vi': 'Dịch xong! Chất lượng: ',
+        'id': 'Terjemahan selesai! Kualitas: ',
+        'default': 'Translation complete! Quality: '
+    };
+    
+    const errorPhrases = {
+        'ja': 'すみません、エラーが発生しました。',
+        'zh': '抱歉，出现了错误。',
+        'hi': 'क्षमा करें, एक त्रुटि हुई है।',
+        'th': 'ขออภัย เกิดข้อผิดพลาด',
+        'vi': 'Xin lỗi, đã xảy ra lỗi.',
+        'id': 'Maaf, terjadi kesalahan.',
+        'default': 'Sorry, an error occurred.'
+    };
+    
+    const readyPhrases = {
+        'ja': '翻訳する準備ができています！',
+        'zh': '准备好翻译了！',
+        'hi': 'अनुवाद के लिए तैयार!',
+        'th': 'พร้อมแปลแล้ว!',
+        'vi': 'Sẵn sàng để dịch!',
+        'id': 'Siap untuk menerjemahkan!',
+        'default': 'Ready to translate!'
+    };
+    
+    // Get correct phrase map
+    let phraseMap;
+    switch (type) {
+        case 'greeting':
+            phraseMap = greetings;
+            break;
+        case 'thinking':
+            phraseMap = thinkingPhrases;
+            break;
+        case 'success':
+            phraseMap = successPhrases;
+            break;
+        case 'error':
+            phraseMap = errorPhrases;
+            break;
+        case 'ready':
+            phraseMap = readyPhrases;
+            break;
+        default:
+            return 'Hello!';
+    }
+    
+    // Get phrase for current language or default
+    let phrase = phraseMap[langCode] || phraseMap['default'];
+    
+    // For success, add quality rating
+    if (type === 'success' && metrics) {
+        let qualityLabel = '';
+        if (metrics.quality >= 0.7) qualityLabel = '★★★★★';
+        else if (metrics.quality >= 0.5) qualityLabel = '★★★★☆';
+        else if (metrics.quality >= 0.3) qualityLabel = '★★★☆☆';
+        else qualityLabel = '★★☆☆☆';
+        
+        phrase += qualityLabel;
+    }
+    
+    return phrase;
 }

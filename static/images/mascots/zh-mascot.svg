@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular base with Chinese theme gradient -->
+  <circle cx="60" cy="60" r="55" fill="url(#gradientZH)" />
+  
+  <!-- Chinese-themed character (panda) -->
+  
+  <!-- Face -->
+  <circle cx="60" cy="60" r="40" fill="#FFFFFF" />
+  
+  <!-- Ears -->
+  <circle cx="35" cy="30" r="12" fill="#333333" />
+  <circle cx="85" cy="30" r="12" fill="#333333" />
+  
+  <!-- Eye patches -->
+  <ellipse cx="45" cy="50" rx="14" ry="12" fill="#333333" />
+  <ellipse cx="75" cy="50" rx="14" ry="12" fill="#333333" />
+  
+  <!-- Eyes -->
+  <circle cx="45" cy="50" r="5" fill="#FFFFFF" />
+  <circle cx="75" cy="50" r="5" fill="#FFFFFF" />
+  
+  <!-- Eye pupils -->
+  <circle cx="45" cy="50" r="2" fill="#333333" />
+  <circle cx="75" cy="50" r="2" fill="#333333" />
+  
+  <!-- Nose -->
+  <circle cx="60" cy="64" r="6" fill="#333333" />
+  
+  <!-- Mouth -->
+  <path d="M52 72 Q 60 78 68 72" stroke="#333333" stroke-width="2.5" fill="none" />
+  
+  <!-- Chinese elements -->
+  <circle cx="60" cy="95" r="8" fill="#E60000" />
+  <path d="M56 91 L 64 91 M 60 87 L 60 99" stroke="#FFDD00" stroke-width="2" />
+  
+  <!-- Chinese lucky knot accent -->
+  <path d="M95 30 Q 90 25 95 20 Q 100 25 95 30" stroke="#E60000" stroke-width="3" fill="none" />
+  <path d="M95 20 Q 100 15 105 20 Q 100 25 95 20" stroke="#E60000" stroke-width="3" fill="none" />
+  
+  <!-- Background gradient definition -->
+  <defs>
+    <linearGradient id="gradientZH" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E60000" />
+      <stop offset="100%" stop-color="#FFDD00" />
+    </linearGradient>
+  </defs>
+</svg>
