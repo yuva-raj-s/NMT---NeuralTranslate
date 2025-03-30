@@ -47,7 +47,7 @@
     <!-- Main Content -->
     <div class="container">
         <h1 class="app-title">Neural Machine Translation</h1>
-        <p class="text-center mb-4" style="color: #aaa;">Powered by the ALT dataset with 13 Asian languages</p>
+        <p class="app-subtitle">Powered by the ALT dataset with 13 Asian languages and advanced quality metrics</p>
         
         <!-- Error Message Container -->
         <div id="error-container" role="alert"></div>
@@ -94,7 +94,7 @@
                 </div>
             </div>
             
-            <div class="p-3 d-flex justify-content-between align-items-center">
+            <div class="translator-controls">
                 <div>
                     <button id="translate-btn" class="btn btn-primary" disabled>
                         <i class="fas fa-language"></i> Translate
@@ -111,42 +111,85 @@
             </div>
         </div>
         
-        <!-- Features Cards -->
-        <div class="row mt-5">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="feature-icon">
-                            <i class="fas fa-globe"></i>
+        <!-- Features Section -->
+        <section class="features-section">
+            <h2 class="section-title">Key Features</h2>
+            <p class="section-description">Our translation system combines neural machine learning with robust evaluation metrics to provide high-quality translations across Asian languages.</p>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3 class="card-title">13 Asian Languages</h3>
+                            <p class="card-text">Support for Bengali, Filipino, Hindi, Indonesian, Japanese, Khmer, Lao, Malay, Myanmar, Thai, Vietnamese, and Chinese - all optimized for the unique characteristics of Asian languages.</p>
                         </div>
-                        <h5 class="card-title">13 Asian Languages</h5>
-                        <p class="card-text">Support for Bengali, Filipino, Hindi, Indonesian, Japanese, Khmer, Lao, Malay, Myanmar, Thai, Vietnamese, and Chinese.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <h3 class="card-title">Neural Technology</h3>
+                            <p class="card-text">Powered by advanced mBART neural machine translation models trained with the ALT dataset for superior accuracy. Our system understands context and linguistic nuances for more natural translations.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3 class="card-title">Quality Metrics</h3>
+                            <p class="card-text">Every translation includes BLEU, ROUGE, and METEOR evaluation metrics - the industry standards for assessing translation quality, giving you confidence in the accuracy of your translations.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="feature-icon">
-                            <i class="fas fa-microchip"></i>
+        </section>
+        
+        <!-- Interactive Features Section -->
+        <section class="features-section">
+            <h2 class="section-title">Interactive Experience</h2>
+            <p class="section-description">Our application features a modern, intuitive interface designed to make translation easy and engaging.</p>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon me-3" style="width: 60px; height: 60px; margin-bottom: 0;">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <h3 class="card-title mb-0">Friendly Mascot Assistant</h3>
+                            </div>
+                            <p class="card-text">Meet our interactive language mascot that guides you through the translation process. It provides helpful tips, reacts to your actions, and displays language-specific personalities for an engaging experience.</p>
                         </div>
-                        <h5 class="card-title">Neural Technology</h5>
-                        <p class="card-text">Powered by advanced neural machine translation models developed with the ALT dataset for accuracy.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon me-3" style="width: 60px; height: 60px; margin-bottom: 0;">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <h3 class="card-title mb-0">Neural Animation</h3>
+                            </div>
+                            <p class="card-text">Watch our unique neural network visualization during translation, with animated nodes and connections showing the active translation process. The progress bar and advanced loading indicators provide real-time feedback.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h5 class="card-title">Industry-Standard Metrics</h5>
-                        <p class="card-text">Evaluate translations with BLEU, ROUGE, and METEOR metrics for assured quality and accuracy.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
     
     <!-- Footer -->
