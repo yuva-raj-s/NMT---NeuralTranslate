@@ -10,46 +10,10 @@ let sourceCharCount;
 let copySourceBtn;
 let copyTranslationBtn;
 let swapBtn;
-let mascotContainer;
-let mascotSpeech;
 let heatmapTooltip;
 
 // Constants
 const MAX_CHARS = 5000;
-
-// Mascot messages for different languages and states
-const MASCOT_MESSAGES = {
-    'default': {
-        start: "Starting translation...",
-        progress: "Processing your text...",
-        success: "Translation complete!",
-        error: "Oops! Something went wrong."
-    },
-    'ja': {
-        start: "翻訳を始めます...",
-        progress: "テキストを処理中...",
-        success: "翻訳完了！",
-        error: "エラーが発生しました。"
-    },
-    'zh': {
-        start: "开始翻译...",
-        progress: "正在处理文本...",
-        success: "翻译完成！",
-        error: "出错了！"
-    },
-    'hi': {
-        start: "अनुवाद शुरू हो रहा है...",
-        progress: "आपके टेक्स्ट पर काम चल रहा है...",
-        success: "अनुवाद पूरा हुआ!",
-        error: "कुछ गलत हो गया।"
-    },
-    'th': {
-        start: "เริ่มการแปล...",
-        progress: "กำลังประมวลผลข้อความ...",
-        success: "แปลเสร็จสมบูรณ์!",
-        error: "เกิดข้อผิดพลาด!"
-    }
-};
 
 // Quality level descriptions for heatmap tooltips
 const QUALITY_DESCRIPTIONS = {
@@ -73,8 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     copySourceBtn = document.getElementById('copy-source-btn');
     copyTranslationBtn = document.getElementById('copy-translation-btn');
     swapBtn = document.getElementById('swap-btn');
-    mascotContainer = document.getElementById('mascot-container');
-    mascotSpeech = document.getElementById('mascot-speech');
+    // Mascot elements removed
     heatmapTooltip = document.getElementById('heatmap-tooltip');
     
     // Add event listeners
