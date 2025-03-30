@@ -1,0 +1,11 @@
+{
+  "source_language": "en",
+  "target_language": "zh",
+  "source_language_name": "English",
+  "target_language_name": "Chinese",
+  "training_examples": 5000,
+  "validation_examples": 500,
+  "epochs": 3,
+  "base_model": "facebook/mbart-large-50-many-to-many-mmt",
+  "trained_on": "2025-03-30 08:15:00"
+}

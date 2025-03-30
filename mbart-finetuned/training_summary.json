@@ -1,0 +1,12 @@
+{
+  "base_model": "facebook/mbart-large-50-many-to-many-mmt",
+  "source_language": "en",
+  "trained_models": [
+    "en-ja",
+    "en-zh",
+    "en-hi"
+  ],
+  "max_examples": 5000,
+  "epochs": 3,
+  "completed_on": "2025-03-30 09:00:00"
+}
