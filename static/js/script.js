@@ -5,8 +5,14 @@ let sourceText;
 let targetLang;
 let translationResult;
 let loadingSpinner;
-let translationContainer;
 let errorContainer;
+let sourceCharCount;
+let copySourceBtn;
+let copyTranslationBtn;
+let swapBtn;
+
+// Constants
+const MAX_CHARS = 5000;
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,17 +23,58 @@ document.addEventListener('DOMContentLoaded', () => {
     targetLang = document.getElementById('target-lang');
     translationResult = document.getElementById('translation-result');
     loadingSpinner = document.getElementById('loading-spinner');
-    translationContainer = document.getElementById('translation-container');
     errorContainer = document.getElementById('error-container');
+    sourceCharCount = document.getElementById('source-char-count');
+    copySourceBtn = document.getElementById('copy-source-btn');
+    copyTranslationBtn = document.getElementById('copy-translation-btn');
+    swapBtn = document.getElementById('swap-btn');
     
     // Add event listeners
     translateBtn.addEventListener('click', translateText);
     clearBtn.addEventListener('click', clearText);
-    sourceText.addEventListener('input', checkInputLength);
+    sourceText.addEventListener('input', handleSourceTextInput);
+    copySourceBtn.addEventListener('click', () => copyText(sourceText.value));
+    copyTranslationBtn.addEventListener('click', () => copyText(translationResult.textContent));
+    swapBtn.addEventListener('click', swapLanguages);
     
     // Initialize the UI state
     updateUIState();
+    
+    // Auto-trigger translation when language changes
+    targetLang.addEventListener('change', () => {
+        if (sourceText.value.trim()) {
+            translateText();
+        }
+    });
 });
+
+// Function to handle source text input
+function handleSourceTextInput() {
+    // Update character count
+    const textLength = sourceText.value.length;
+    sourceCharCount.textContent = `${textLength}/${MAX_CHARS}`;
+    
+    // Validate max length
+    if (textLength > MAX_CHARS) {
+        sourceText.value = sourceText.value.substring(0, MAX_CHARS);
+        sourceCharCount.textContent = `${MAX_CHARS}/${MAX_CHARS}`;
+        sourceCharCount.style.color = '#f44336';
+    } else {
+        sourceCharCount.style.color = textLength > MAX_CHARS * 0.9 ? '#f4b400' : '#888';
+    }
+    
+    // Update UI state
+    updateUIState();
+    
+    // Auto-translate if text length is reasonable
+    if (textLength > 0 && textLength <= 100) {
+        // Use debounce to avoid too many requests
+        clearTimeout(window.translateTimeout);
+        window.translateTimeout = setTimeout(() => {
+            translateText();
+        }, 1000);
+    }
+}
 
 // Function to handle the translation
 async function translateText() {
@@ -83,22 +130,30 @@ async function translateText() {
 // Function to display the translation result
 function displayTranslation(translation) {
     translationResult.textContent = translation;
-    translationContainer.style.display = 'block';
+    translationResult.classList.add('show');
+    
+    // Highlight translation result briefly
+    translationResult.style.backgroundColor = 'rgba(66, 133, 244, 0.1)';
+    setTimeout(() => {
+        translationResult.style.backgroundColor = '';
+    }, 300);
 }
 
 // Function to clear the text and results
 function clearText() {
     sourceText.value = '';
     translationResult.textContent = '';
-    translationContainer.style.display = 'none';
+    translationResult.classList.remove('show');
     hideError();
+    sourceCharCount.textContent = `0/${MAX_CHARS}`;
+    sourceCharCount.style.color = '#888';
     updateUIState();
 }
 
 // Function to show/hide loading state
 function showLoading(isLoading) {
     if (isLoading) {
-        loadingSpinner.style.display = 'inline-block';
+        loadingSpinner.style.display = 'block';
         translateBtn.disabled = true;
     } else {
         loadingSpinner.style.display = 'none';
@@ -110,6 +165,11 @@ function showLoading(isLoading) {
 function showError(message) {
     errorContainer.textContent = message;
     errorContainer.style.display = 'block';
+    
+    // Auto-hide error after 5 seconds
+    setTimeout(() => {
+        hideError();
+    }, 5000);
 }
 
 // Function to hide error message
@@ -117,14 +177,71 @@ function hideError() {
     errorContainer.style.display = 'none';
 }
 
-// Function to check input length and update UI state
-function checkInputLength() {
-    updateUIState();
-}
-
 // Function to update UI state based on input
 function updateUIState() {
     const text = sourceText.value.trim();
     translateBtn.disabled = !text;
-    clearBtn.disabled = !text && translationContainer.style.display === 'none';
+    clearBtn.disabled = !text && !translationResult.textContent;
+    copySourceBtn.style.display = text ? 'block' : 'none';
+    copyTranslationBtn.style.display = translationResult.textContent ? 'block' : 'none';
 }
+
+// Function to copy text to clipboard
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show brief success feedback
+        const successMessage = document.createElement('div');
+        successMessage.innerText = 'Copied!';
+        successMessage.className = 'copy-success';
+        successMessage.style.position = 'fixed';
+        successMessage.style.top = '10%';
+        successMessage.style.left = '50%';
+        successMessage.style.transform = 'translateX(-50%)';
+        successMessage.style.backgroundColor = 'rgba(15, 157, 88, 0.9)';
+        successMessage.style.color = 'white';
+        successMessage.style.padding = '10px 20px';
+        successMessage.style.borderRadius = '4px';
+        successMessage.style.zIndex = '1000';
+        document.body.appendChild(successMessage);
+        
+        setTimeout(() => {
+            document.body.removeChild(successMessage);
+        }, 1500);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+
+// Function to swap languages
+function swapLanguages() {
+    // Currently we can only translate from English to other languages
+    // This animation is just for show until we implement bi-directional translation
+    swapBtn.classList.add('rotating');
+    
+    setTimeout(() => {
+        swapBtn.classList.remove('rotating');
+    }, 500);
+}
+
+// Add animation CSS
+const style = document.createElement('style');
+style.innerHTML = `
+.rotating {
+  animation: rotate-animation 0.5s ease;
+}
+
+@keyframes rotate-animation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(180deg); }
+}
+
+#translation-result {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#translation-result.show {
+  opacity: 1;
+}
+`;
+document.head.appendChild(style);

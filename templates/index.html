@@ -8,6 +8,9 @@
     <!-- Bootstrap CSS (Replit Theme) -->
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
@@ -15,20 +18,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar with Gradient Accent -->
+    <div class="accent-bar"></div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">NMT App</a>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>
+                <span style="font-weight: 300;">Neural</span><span style="font-weight: 500; color: var(--primary-blue);">Translate</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">Translator</a>
+                        <a class="nav-link active" href="/"><i class="fas fa-globe-asia me-1"></i> Translator</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/about">About</a>
+                        <a class="nav-link" href="/about"><i class="fas fa-info-circle me-1"></i> About</a>
                     </li>
                 </ul>
             </div>
@@ -36,20 +43,26 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container content-area">
-        <h1 class="text-center app-title">Neural Machine Translation</h1>
-        <p class="text-center mb-4">Translate English text to various Asian languages using mBART</p>
+    <div class="container">
+        <h1 class="app-title">Neural Machine Translation</h1>
+        <p class="text-center mb-4" style="color: #aaa;">Powered by the ALT dataset with 13 Asian languages</p>
         
         <!-- Error Message Container -->
-        <div id="error-container" class="alert" role="alert"></div>
+        <div id="error-container" role="alert"></div>
         
-        <!-- Translation Form -->
-        <div class="row">
-            <div class="col-md-12 mb-3">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
-                    <h4>English Text</h4>
-                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-                        <label for="target-lang" class="me-2">Target Language:</label>
+        <!-- Google Translate-style UI -->
+        <div class="translator-container">
+            <div class="translator-header">
+                <div class="language-selector">
+                    <div class="source-lang">
+                        <span class="language-option active">English</span>
+                    </div>
+                    
+                    <button class="swap-languages" id="swap-btn" title="Swap Languages">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                    
+                    <div class="target-lang">
                         <select id="target-lang" class="form-select">
                             {% for code, name in languages.items() %}
                                 <option value="{{ code }}">{{ name }}</option>
@@ -57,33 +70,89 @@
                         </select>
                     </div>
                 </div>
-                <textarea id="source-text" class="form-control" placeholder="Enter English text here..."></textarea>
-                <div class="mt-3">
-                    <button id="translate-btn" class="btn btn-primary" disabled>
-                        <i class="fas fa-language"></i> Translate
+            </div>
+            
+            <div class="translator-body">
+                <!-- Source Text Input -->
+                <div class="text-container">
+                    <button class="copy-btn" id="copy-source-btn" title="Copy text">
+                        <i class="far fa-copy"></i>
                     </button>
-                    <button id="clear-btn" class="btn btn-secondary" disabled>
-                        <i class="fas fa-eraser"></i> Clear
-                    </button>
-                    <div id="loading-spinner" class="spinner-border spinner-border-sm text-light"></div>
+                    <textarea id="source-text" class="form-control" placeholder="Enter text to translate..."></textarea>
+                    <div class="char-count" id="source-char-count">0/5000</div>
                 </div>
+                
+                <!-- Translation Output -->
+                <div class="text-container">
+                    <button class="copy-btn" id="copy-translation-btn" title="Copy translation">
+                        <i class="far fa-copy"></i>
+                    </button>
+                    <div id="translation-result" class="form-control" style="min-height: 150px; overflow-y: auto;"></div>
+                    <div id="loading-spinner" class="spinner-border text-light position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                </div>
+            </div>
+            
+            <div class="p-3">
+                <button id="translate-btn" class="btn btn-primary" disabled>
+                    <i class="fas fa-language"></i> Translate
+                </button>
+                <button id="clear-btn" class="btn btn-secondary" disabled>
+                    <i class="fas fa-eraser"></i> Clear
+                </button>
             </div>
         </div>
         
-        <!-- Translation Result -->
-        <div id="translation-container" class="row mt-4">
-            <div class="col-md-12">
-                <h4>Translation Result</h4>
-                <div id="translation-result" class="p-3 bg-dark rounded"></div>
+        <!-- Features Cards -->
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h5 class="card-title">13 Asian Languages</h5>
+                        <p class="card-text">Support for Bengali, Filipino, Hindi, Indonesian, Japanese, Khmer, Lao, Malay, Myanmar, Thai, Vietnamese, and Chinese.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <h5 class="card-title">Neural Technology</h5>
+                        <p class="card-text">Powered by advanced neural machine translation models developed with the ALT dataset for accuracy.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h5 class="card-title">Fast & Accurate</h5>
+                        <p class="card-text">Get quick translations that maintain context and nuance across all supported languages.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
     <!-- Footer -->
-    <footer class="footer bg-dark text-light">
+    <footer class="footer">
         <div class="container">
-            <p class="mb-0">Neural Machine Translation App using mBART and ALT dataset</p>
-            <small class="text-muted">Created for language translation between English and Asian languages</small>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 style="color: var(--primary-blue);">NeuralTranslate</h5>
+                    <p class="mb-0">Powered by mBART and ALT dataset</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Created for translation between English and Asian languages</p>
+                    <p class="small text-muted">© 2025 Neural Machine Translation Project</p>
+                </div>
+            </div>
         </div>
     </footer>
     

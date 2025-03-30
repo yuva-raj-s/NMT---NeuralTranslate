@@ -8,6 +8,9 @@
     <!-- Bootstrap CSS (Replit Theme) -->
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
@@ -15,20 +18,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar with Gradient Accent -->
+    <div class="accent-bar"></div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">NMT App</a>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>
+                <span style="font-weight: 300;">Neural</span><span style="font-weight: 500; color: var(--primary-blue);">Translate</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Translator</a>
+                        <a class="nav-link" href="/"><i class="fas fa-globe-asia me-1"></i> Translator</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/about">About</a>
+                        <a class="nav-link active" href="/about"><i class="fas fa-info-circle me-1"></i> About</a>
                     </li>
                 </ul>
             </div>
@@ -36,54 +43,82 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container content-area">
-        <h1 class="text-center app-title">About This Application</h1>
+    <div class="container">
+        <h1 class="app-title">About NeuralTranslate</h1>
         
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card bg-dark">
-                    <div class="card-body">
-                        <h3 class="card-title">Neural Machine Translation App</h3>
-                        <p class="card-text">This web application provides neural machine translation from English to various Asian languages using mBART (Multilingual BART) pre-trained model.</p>
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-brain fa-2x"></i>
+                            </div>
+                            <h2 class="mb-3">Neural Machine Translation Technology</h2>
+                            <p class="lead text-muted">Harnessing the power of advanced AI for accurate translation</p>
+                        </div>
                         
-                        <h4 class="mt-4">Technology Stack</h4>
-                        <ul>
-                            <li><strong>Backend:</strong> Python, Flask, Hugging Face Transformers</li>
-                            <li><strong>Model:</strong> mBART (facebook/mbart-large-50-many-to-many-mmt)</li>
-                            <li><strong>Frontend:</strong> HTML5, Bootstrap 5, JavaScript</li>
-                        </ul>
-                        
-                        <h4 class="mt-4">About mBART</h4>
-                        <p>mBART is a sequence-to-sequence denoising auto-encoder pre-trained on large-scale monolingual corpora in many languages using the BART objective. mBART is one of the first methods for pre-training a complete sequence-to-sequence model by denoising full texts in multiple languages, while previous approaches have focused only on the encoder, decoder, or reconstructing parts of the text.</p>
-                        
-                        <h4 class="mt-4">Supported Languages</h4>
-                        <p>This application supports translation from English to all 13 languages available in the ALT (Asian Language Treebank) dataset:</p>
-                        <div class="row">
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <ul>
-                                    <li>Bengali</li>
-                                    <li>English</li>
-                                    <li>Filipino</li>
-                                    <li>Hindi</li>
-                                    <li>Bahasa Indonesia</li>
-                                    <li>Japanese</li>
-                                    <li>Khmer</li>
-                                </ul>
+                                <h4><i class="fas fa-robot me-2" style="color: var(--primary-blue);"></i>What is Neural Machine Translation?</h4>
+                                <p>Neural Machine Translation (NMT) is an advanced approach that uses artificial neural networks to translate text from one language to another. Unlike traditional methods, NMT considers the entire sentence context to produce more natural and accurate translations.</p>
+                                <p>The system learns patterns from millions of translated texts, enabling it to understand language nuances that traditional rule-based systems cannot capture.</p>
                             </div>
                             <div class="col-md-6">
-                                <ul>
-                                    <li>Lao</li>
-                                    <li>Malay</li>
-                                    <li>Myanmar (Burmese)</li>
-                                    <li>Thai</li>
-                                    <li>Vietnamese</li>
-                                    <li>Chinese (Simplified)</li>
-                                </ul>
+                                <h4><i class="fas fa-microchip me-2" style="color: var(--primary-blue);"></i>About mBART</h4>
+                                <p>mBART (Multilingual BART) is a state-of-the-art sequence-to-sequence model pre-trained on large-scale monolingual corpora in many languages. It's specifically designed to handle translation between multiple languages.</p>
+                                <p>As one of the first methods to pre-train a complete sequence-to-sequence model by denoising full texts in multiple languages, mBART enables high-quality translations across diverse language pairs.</p>
                             </div>
                         </div>
                         
-                        <h4 class="mt-4">About the ALT Dataset</h4>
-                        <p>The ALT (Asian Language Treebank) dataset is a parallel corpus covering several Asian languages. It contains translations of the same content across multiple languages, making it ideal for training and fine-tuning neural machine translation models, especially for low-resource Asian languages.</p>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="p-4" style="background-color: rgba(66, 133, 244, 0.05); border-radius: var(--border-radius);">
+                                    <h4 class="text-center mb-4"><i class="fas fa-globe-asia me-2" style="color: var(--primary-blue);"></i>Supported Languages</h4>
+                                    <p class="text-center">This application supports translation from English to all 13 languages available in the ALT (Asian Language Treebank) dataset:</p>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Bengali (bn)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>English (en)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Filipino (fil)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Hindi (hi)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Bahasa Indonesia (id)</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Japanese (ja)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Khmer (km)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Lao (lo)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Malay (ms)</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Myanmar (my)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Thai (th)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Vietnamese (vi)</li>
+                                                <li class="mb-2"><i class="fas fa-language me-2" style="color: var(--primary-blue);"></i>Chinese (zh)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4><i class="fas fa-database me-2" style="color: var(--primary-blue);"></i>About the ALT Dataset</h4>
+                            <p>The ALT (Asian Language Treebank) dataset is a high-quality parallel corpus covering numerous Asian languages. It contains professional translations of the same content across multiple languages, providing a reliable foundation for training neural machine translation models.</p>
+                            <p>This dataset is particularly valuable for low-resource Asian languages, which often have limited training data available. By using the ALT dataset, our translation system can provide accurate translations even for language pairs that are typically challenging for machine translation.</p>
+                        </div>
+                        
+                        <div class="text-center mt-5">
+                            <a href="/" class="btn btn-primary">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Translator
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -91,10 +126,18 @@
     </div>
     
     <!-- Footer -->
-    <footer class="footer bg-dark text-light">
+    <footer class="footer">
         <div class="container">
-            <p class="mb-0">Neural Machine Translation App using mBART and ALT dataset</p>
-            <small class="text-muted">Created for language translation between English and Asian languages</small>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 style="color: var(--primary-blue);">NeuralTranslate</h5>
+                    <p class="mb-0">Powered by mBART and ALT dataset</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Created for translation between English and Asian languages</p>
+                    <p class="small text-muted">© 2025 Neural Machine Translation Project</p>
+                </div>
+            </div>
         </div>
     </footer>
     
