@@ -50,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
             translateText();
         }
     });
+    
+    // Add glass morphism elements
+    addFuturisticElements();
 });
 
 // Function to handle source text input
@@ -416,3 +419,113 @@ style.innerHTML = `
 }
 `;
 document.head.appendChild(style);
+
+// Function to add futuristic UI elements
+function addFuturisticElements() {
+    // Add background particles
+    createParticles();
+    
+    // Add glow effects to translator container
+    addGlowEffects();
+    
+    // Apply glass morphism to metric cards dynamically
+    document.addEventListener('DOMNodeInserted', function(e) {
+        if (e.target.classList && e.target.classList.contains('metrics-container')) {
+            applyGlassToMetrics(e.target);
+        }
+    });
+}
+
+// Create floating background particles
+function createParticles() {
+    const colors = [
+        'rgba(66, 133, 244, 0.4)',  // Blue
+        'rgba(156, 39, 176, 0.3)',  // Purple
+        'rgba(0, 188, 212, 0.3)',   // Teal
+        'rgba(233, 30, 99, 0.2)'    // Pink
+    ];
+    
+    const sizes = [4, 6, 8, 10, 12];
+    const count = 15; // Number of particles
+    
+    for (let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // Random properties
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 5;
+        const duration = 15 + Math.random() * 10;
+        
+        // Apply styles
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.backgroundColor = color;
+        particle.style.left = `${left}vw`;
+        particle.style.top = `${Math.random() * 100}vh`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        
+        // Add to body
+        document.body.appendChild(particle);
+    }
+}
+
+// Add ambient glow effects
+function addGlowEffects() {
+    const translatorContainer = document.querySelector('.translator-container');
+    if (!translatorContainer) return;
+    
+    // Add glow elements
+    const glow1 = document.createElement('div');
+    glow1.className = 'glow glow-1';
+    
+    const glow2 = document.createElement('div');
+    glow2.className = 'glow glow-2';
+    
+    translatorContainer.appendChild(glow1);
+    translatorContainer.appendChild(glow2);
+}
+
+// Apply glass morphism to metric cards
+function applyGlassToMetrics(metricsContainer) {
+    // Get all metric cards
+    const metricCards = metricsContainer.querySelectorAll('.metric-card');
+    
+    metricCards.forEach(card => {
+        // Apply glass morphism
+        card.style.background = 'rgba(40, 40, 40, 0.4)';
+        card.style.backdropFilter = 'blur(8px)';
+        card.style.WebkitBackdropFilter = 'blur(8px)';
+        card.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+        card.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+        card.style.transition = 'all 0.3s ease';
+        
+        // Add hover effect
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+            card.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.15)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.12)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+        });
+    });
+    
+    // Style the overall quality section
+    const overallQuality = metricsContainer.querySelector('.overall-quality');
+    if (overallQuality) {
+        overallQuality.style.background = 'rgba(30, 30, 30, 0.3)';
+        overallQuality.style.padding = '10px';
+        overallQuality.style.borderRadius = '8px';
+        overallQuality.style.marginTop = '15px';
+        overallQuality.style.backdropFilter = 'blur(5px)';
+        overallQuality.style.WebkitBackdropFilter = 'blur(5px)';
+        overallQuality.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+    }
+}
