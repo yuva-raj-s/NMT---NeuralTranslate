@@ -213,7 +213,15 @@ class MBartTranslator:
         Returns:
             bool: True if model was loaded successfully, False otherwise
         """
-        from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
+        if not TORCH_AVAILABLE:
+            logger.warning("PyTorch not available, cannot load models")
+            return False
+            
+        try:
+            from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
+        except ImportError:
+            logger.warning("Transformers library not available, cannot load models")
+            return False
         
         # Create language pair key
         lang_pair = f"{source_lang}-{target_lang}"
@@ -264,9 +272,17 @@ class MBartTranslator:
     
     def load_model(self):
         """Load the default mBART model"""
+        if not TORCH_AVAILABLE:
+            logger.warning("PyTorch not available, cannot load models")
+            return False
+            
         try:
             from transformers import MBart50TokenizerFast, MBartForConditionalGeneration
+        except ImportError:
+            logger.warning("Transformers library not available, cannot load models")
+            return False
             
+        try:
             # For backward compatibility, try loading the main model directory
             if os.path.exists(self.model_base_path) and os.path.isfile(os.path.join(self.model_base_path, "pytorch_model.bin")):
                 logger.info(f"Loading legacy mBART model from {self.model_base_path}")
@@ -291,9 +307,6 @@ class MBartTranslator:
                 logger.warning(f"No mBART models found in {self.model_base_path}. Using fallback behavior.")
                 return False
                 
-        except ImportError:
-            logger.error("transformers package not installed, cannot load mBART model")
-            return False
         except Exception as e:
             logger.error(f"Error loading mBART model: {str(e)}")
             return False
