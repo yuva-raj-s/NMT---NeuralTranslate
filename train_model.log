@@ -1,0 +1,7 @@
+2025-03-31 20:40:25,943 - datasets - INFO - PyTorch version 2.6.0 available.
+2025-03-31 20:40:25,950 - datasets - INFO - TensorFlow version 2.19.0 available.
+2025-03-31 20:40:32,123 - __main__ - INFO - Downloading and preparing ALT dataset...
+2025-03-31 20:40:49,230 - __main__ - INFO - ALT dataset preparation completed successfully
+2025-03-31 20:40:49,231 - __main__ - INFO - Training mBART models for all language pairs...
+2025-03-31 20:41:14,067 - __main__ - ERROR - Error training models: Command '['C:\\Users\\Yuvaraj s\\AppData\\Local\\Programs\\Python\\Python312\\python.exe', 'train_mbart_model.py', '--data_path', './datasets\\alt_processed', '--output_dir', './mbart-finetuned', '--max_examples', '5000', '--epochs', '3', '--batch_size', '8', '--all']' returned non-zero exit status 1.
+2025-03-31 20:41:14,068 - __main__ - INFO - Training process completed
