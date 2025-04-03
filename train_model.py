@@ -101,6 +101,8 @@ def main():
     """Main function to run the training process"""
     parser = argparse.ArgumentParser(description="Train mBART model with ALT dataset")
     
+    parser.add_argument("--all", action="store_true", 
+                       help="Train models for all language pairs")
     parser.add_argument("--download_only", action="store_true", 
                         help="Only download and prepare the ALT dataset without training")
     parser.add_argument("--data_dir", type=str, default="./datasets", 
