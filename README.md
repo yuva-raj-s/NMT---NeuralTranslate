@@ -50,7 +50,7 @@ Trained using the FLORES-101 dataset, ensuring:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nmt-app.git
+git clone https://github.com/yuva-raj-s/NMT---NeuralTranslate.git
 cd nmt-app
 ```
 
